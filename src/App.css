@@ -6,25 +6,3 @@
   color: white;
 }
 
-.App {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(135deg, #333333, #555555);
-  background-size: cover;
-  background-position: center;
-  padding: 20px;
-}
-
-.App > div {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 500px;
-  text-align: center;
-}

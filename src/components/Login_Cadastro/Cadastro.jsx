@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaCheckCircle } from "react-icons/fa"; // Adicione FaCheckCircle
 import { useNavigate } from "react-router-dom";
 import "./Login_Cadastro.css";
+import LoadingSpinner from "./LoadingSpinner"; // Importação do componente LoadingSpinner
+import ReactDOM from 'react-dom'; // Adicione esta importação no topo do arquivo
 
 function Cadastro() {
     const [username, setUsername] = useState("");
@@ -109,21 +111,24 @@ function Cadastro() {
 
     return (
         <>
-            {carregando && (
-                <div className="loading-overlay">
-                    <div className="loading-animation">
-                        <div className="loading-circle"></div>
-                        <p>Processando cadastro...</p>
-                    </div>
-                </div>
-            )}
+            {carregando && <LoadingSpinner message="Processando cadastro..." />}
 
             <div className={`container ${carregando ? "invisible" : ""}`}>
-                {sucesso && (
+                {sucesso && ReactDOM.createPortal(
                     <div className="confirmation-overlay">
-                        <p>Cadastro realizado com sucesso!</p>
-                        <button onClick={handleVoltar}>Voltar para a tela de login</button>
-                    </div>
+                        <div className="confirmation-content">
+                            <div className="confirmation-icon">
+                                <FaCheckCircle size={40} />
+                            </div>
+                            <p className="confirmation-message">
+                                Cadastro realizado com sucesso!
+                            </p>
+                            <button className="confirmation-button" onClick={handleVoltar}>
+                                Voltar para a tela de login
+                            </button>
+                        </div>
+                    </div>,
+                    document.body
                 )}
 
                 {!carregando && !sucesso && (

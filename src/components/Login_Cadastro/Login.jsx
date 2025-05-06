@@ -73,7 +73,7 @@ const Login = () => {
 
                 <button type="submit">Entrar</button>
 
-                <p>Não possui conta ainda? <Link to="/signup">Cadastre-se</Link></p>
+                <p>Não possui conta ainda? <Link to="/cadastro">Cadastre-se</Link></p>
             </form>
         </div>
     );
