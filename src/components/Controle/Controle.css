@@ -1,0 +1,9 @@
+.grafico-container {
+    width: 30%;
+    height: 400px;
+    background-color: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 2px sold rgba(255, 255, 255, 0.2);
+    padding: 40px;
+    border-radius: 10px;
+}

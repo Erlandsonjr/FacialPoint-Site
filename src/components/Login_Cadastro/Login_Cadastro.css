@@ -1,0 +1,297 @@
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #333333, #555555); 
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.container h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #f5a623; 
+}
+
+.input-field {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.input-field input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.input-field input:focus {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 8px rgba(255, 165, 35, 0.5); 
+}
+
+.input-fieldPhoto {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.input-fieldPhoto input {
+    display: none; 
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #f5a623; 
+    color: #fff;
+}
+
+.upload-icon {
+    margin-bottom: 10px;
+    color: #f5a623; 
+}
+
+.upload-label p {
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.upload-label span {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.foto-nome {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #f5a623; 
+    text-align: center;
+    word-break: break-word; 
+}
+
+.input-field .icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.container button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #f5a623, #ff7b00);
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.container button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.container p {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.container p a {
+    color: #f5a623; 
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.container p a:hover {
+    color: #ff7b00; 
+}
+
+.erro {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.sucesso {
+    color: #51cf66;
+    font-size: 14px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: none;
+    backdrop-filter: none;
+
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.loading-animation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-in-out;
+    color: #fff;
+}
+
+.loading-animation p {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: #fff;
+    font-weight: 500;
+    letter-spacing: 1px;
+    animation: pulse 1.5s infinite;
+}
+
+.loading-circle {
+    width: 60px;
+    height: 60px;
+    border: 6px solid transparent;
+    border-top: 6px solid #FFDF00;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 10px #FFDF00;
+  }
+
+.confirmation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 1000;
+    backdrop-filter: blur(5px); 
+}
+
+.confirmation-overlay p {
+    font-size: 1.5rem;
+    color: #f5a623; 
+    margin-bottom: 20px;
+}
+
+.confirmation-overlay button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #f5a623, #ff7b00);
+    border: none;
+    border-radius: 30px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.confirmation-overlay button:hover {
+    transform: scale(1.1);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .container h1 {
+        font-size: 24px;
+    }
+
+    .input-field input {
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    .container button {
+        font-size: 14px;
+        padding: 12px;
+    }
+}
