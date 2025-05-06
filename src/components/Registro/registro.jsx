@@ -27,22 +27,10 @@ function RegistroPonto() {
     }, []);
 
     useEffect(() => {
-        if (timerAtivo) {
-            if (contadorTempo > 0) {
-                timerRef.current = setTimeout(() => {
-                    setContadorTempo(contadorTempo - 1);
-                }, 1000);
-            } else {
-                tirarFoto();
-                setTimerAtivo(false);
-            }
+        if (stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
         }
-        return () => {
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-            }
-        };
-    }, [timerAtivo, contadorTempo]);
+    }, [stream]);
 
     const iniciarCamera = async () => {
         try {
@@ -63,6 +51,9 @@ function RegistroPonto() {
             
             if (videoRef.current) {
                 videoRef.current.srcObject = streamCamera;
+                await videoRef.current.play().catch(err => {
+                    console.error("Erro ao iniciar reprodução de vídeo:", err);
+                });
             }
         } catch (error) {
             console.error("Erro ao acessar câmera:", error);
@@ -83,28 +74,112 @@ function RegistroPonto() {
         setTimerAtivo(true);
     };
 
+    // Função melhorada para capturar a foto
     const tirarFoto = () => {
-        if (videoRef.current && canvasRef.current) {
-            const canvas = canvasRef.current;
-            const video = videoRef.current;
-            const context = canvas.getContext('2d');
+        console.log("Tentando capturar foto...");
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video || !canvas) {
+            console.error("Referências de vídeo ou canvas não encontradas");
+            setErro("Erro ao capturar imagem: referências não encontradas");
+            return;
+        }
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            // Desenhar o vídeo no canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Converter para blob com melhor qualidade
-            canvas.toBlob((blob) => {
-                setFoto(blob);
-            }, 'image/jpeg', 0.95); // Aumentando a qualidade para 95%
-
-            pararCamera();
+        try {
+            // Certifique-se de que o canvas existe e tem dimensões válidas
+            if (video.videoWidth && video.videoHeight) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const context = canvas.getContext('2d');
+                if (!context) {
+                    console.error("Erro ao obter contexto 2d do canvas");
+                    setErro("Erro ao processar imagem");
+                    return;
+                }
+                
+                // Desenhe o quadro atual do vídeo no canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Tente converter para blob
+                try {
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            console.log('Foto capturada com sucesso:', blob.size, 'bytes');
+                            setFoto(blob);
+                            pararCamera(); // Pare a câmera somente após a foto ser capturada com sucesso
+                        } else {
+                            console.error("Blob gerado é nulo");
+                            setErro("Erro ao processar a imagem capturada");
+                        }
+                    }, 'image/jpeg', 0.9);
+                } catch (blobError) {
+                    console.error("Erro ao gerar blob:", blobError);
+                    
+                    // Alternativa: tente usar dataURL se o blob falhar
+                    try {
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                        console.log("DataURL gerado:", dataUrl.substring(0, 50) + "...");
+                        
+                        // Converter dataURL para blob manualmente
+                        const byteString = atob(dataUrl.split(',')[1]);
+                        const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        
+                        for (let i = 0; i < byteString.length; i++) {
+                            ia[i] = byteString.charCodeAt(i);
+                        }
+                        
+                        const manualBlob = new Blob([ab], {type: mimeString});
+                        setFoto(manualBlob);
+                        pararCamera();
+                    } catch (dataUrlError) {
+                        console.error("Também falhou ao usar dataURL:", dataUrlError);
+                        setErro("Não foi possível processar a imagem");
+                    }
+                }
+            } else {
+                console.error("Dimensões do vídeo não disponíveis:", video.videoWidth, video.videoHeight);
+                setErro("Erro ao capturar imagem: vídeo não está pronto");
+            }
+        } catch (error) {
+            console.error("Erro geral ao tirar foto:", error);
+            setErro("Ocorreu um erro ao capturar a foto. Por favor, tente novamente.");
         }
     };
 
+    useEffect(() => {
+        if (timerAtivo) {
+            if (contadorTempo > 0) {
+                timerRef.current = setTimeout(() => {
+                    setContadorTempo(contadorTempo - 1);
+                }, 1000);
+            } else {
+                console.log("Contagem chegou a zero, chamando tirarFoto()");
+                setTimerAtivo(false); // Desative o timer antes de tirar a foto
+                tirarFoto(); // Tire a foto quando o contador chegar a zero
+            }
+        }
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+        };
+    }, [timerAtivo, contadorTempo]);
+
     const registrarPonto = async () => {
+        // Verifique o token no console para debug
+        const token = localStorage.getItem('token');
+        console.log("Token atual:", token);
+
+        // Se não houver token ou estiver vazio
+        if (!token || token === 'undefined' || token === 'null') {
+            // Redirecionar para login
+            window.location.href = '/';
+            throw new Error('Sessão expirada. Por favor, faça login novamente.');
+        }
+
         if (!foto) {
             setErro('Por favor, tire uma foto primeiro.');
             return;
@@ -114,45 +189,109 @@ function RegistroPonto() {
         setErro('');
 
         try {
-            // Criar FormData com a foto
+            // Obter token do localStorage
+            const token = localStorage.getItem('token');
+            console.log("Token atual:", token?.substring(0, 10) + "...");
+            
+            if (!token || token === 'undefined' || token === 'null') {
+                // Redirecionar para login automaticamente
+                setTimeout(() => window.location.href = '/', 3000);
+                throw new Error('Sessão expirada. Por favor, faça login novamente.');
+            }
+            
+            // Buscar dados do usuário
+            const registroResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).catch(networkError => {
+                console.error("Erro de rede:", networkError);
+                throw new Error('Erro de conexão com o servidor. Verifique sua internet.');
+            });
+            
+            // Mostrar status da resposta para debug
+            console.log("Status da resposta:", registroResponse.status);
+            
+            if (!registroResponse.ok) {
+                const errorData = await registroResponse.json().catch(() => ({}));
+                if (registroResponse.status === 401) {
+                    localStorage.removeItem('token');
+                    setTimeout(() => window.location.href = '/', 3000);
+                    throw new Error('Sessão expirada. Redirecionando para login...');
+                }
+                throw new Error(errorData?.message || `Erro no servidor (${registroResponse.status}). Tente novamente.`);
+            }
+            
+            // Adicione tratamento de erro para o JSON
+            let jsonRegistroResponse;
+            try {
+                jsonRegistroResponse = await registroResponse.json();
+                // Verifique se a resposta contém dados válidos
+                if (!jsonRegistroResponse) {
+                    throw new Error("Resposta vazia do servidor");
+                }
+            } catch (jsonError) {
+                console.error("Erro ao processar JSON:", jsonError);
+                throw new Error("Erro ao processar resposta do servidor. Formato inválido.");
+            }
+            
+            // Verifique se os campos necessários existem
+            const fotoCampo = jsonRegistroResponse.foto;
+            if (!fotoCampo) {
+                throw new Error("Não há foto cadastrada para este usuário. Contate o administrador.");
+            }
+            
+            const nomeToken = jsonRegistroResponse.nome;
+            if (!nomeToken) {
+                throw new Error("Dados de usuário incompletos. Nome não encontrado.");
+            }
+            
+            // Preparar dados para verificação facial
             const formData = new FormData();
             formData.append('file', foto);
+            formData.append('codificacao', fotoCampo);
 
             // Enviar para verificação facial
-            const verificacaoResponse = await fetch('https://gerarcodificacaofaceponto-production.up.railway.app/verificar-face', {
+            const verificacaoResponse = await fetch('https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer', {
                 method: 'POST',
                 body: formData,
             });
 
             if (!verificacaoResponse.ok) {
                 const errorData = await verificacaoResponse.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Erro na verificação facial. Tente novamente com melhor iluminação.');
+                throw new Error(errorData?.message || 'Erro na verificação facial. Tente novamente com melhor iluminação.');
             }
-
+            
             const verificacaoData = await verificacaoResponse.json();
-
-            // Obter token do localStorage
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Você não está autenticado. Por favor, faça login novamente.');
+            
+            // Verificar resultado da comparação facial
+            if (!verificacaoData.match) {
+                throw new Error('Não foi possível confirmar sua identidade. Por favor, tente novamente.');
             }
-
-            // Registrar o ponto
-            const registroResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/frequencias/registro', {
+            
+            // Registrar frequência
+            const resposta = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/me/frequencia', {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json', 
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    verificacao: verificacaoData,
+                    nome: nomeToken,
+                    data: new Date(),
+                    horario: new Date()
                 }),
             });
-
-            if (!registroResponse.ok) {
-                const errorData = await registroResponse.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Erro ao registrar o ponto. Tente novamente.');
+            
+            if (!resposta.ok) {
+                const errorData = await resposta.json().catch(() => ({}));
+                throw new Error(errorData?.message || 'Erro ao registrar frequência. Tente novamente.');
             }
+            
+            const resultado = await resposta.json();
+            console.log('Frequência registrada com sucesso:', resultado);
 
             // Registro bem-sucedido
             setSucesso(true);
@@ -162,6 +301,7 @@ function RegistroPonto() {
             }, 3000);
 
         } catch (error) {
+            console.error("Detalhe do erro:", error);
             setErro(error.message || 'Ocorreu um erro durante o registro. Tente novamente.');
         } finally {
             setCarregando(false);
@@ -280,7 +420,11 @@ function RegistroPonto() {
                     {foto && (
                         <div className="foto-preview">
                             <h3>Revisar Foto</h3>
-                            <canvas ref={canvasRef} className="foto-canvas" />
+                            <img 
+                                src={URL.createObjectURL(foto)} 
+                                alt="Foto capturada" 
+                                className="foto-canvas" 
+                            />
                             <div className="foto-actions">
                                 <button 
                                     className="action-button retry" 
@@ -307,9 +451,8 @@ function RegistroPonto() {
                 <div className="status-info">
                     <p>{new Date().toLocaleString()}</p>
                 </div>
-
-                <canvas ref={canvasRef} style={{ display: 'none' }} />
             </div>
+            <canvas ref={canvasRef} style={{ display: 'none', position: 'absolute' }} />
         </>
     );
 }

@@ -33,7 +33,7 @@ const Login = () => {
             localStorage.setItem("token", data.token);
             console.log("Login realizado com sucesso!");
 
-            navigate("/controle");
+            navigate("/registro");
 
         } catch (error) {
             setErro(error.message);

@@ -8,12 +8,11 @@ body {
     align-items: center;
 }
 
-/* Container para toda a página */
 .page-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;      /* Use min-height, não height */
+    min-height: 100vh;     
     width: 100%;
     position: relative;
     padding: 40px 16px;
