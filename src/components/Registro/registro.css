@@ -1,48 +1,53 @@
-/* Estilos base */
 :root {
-    --primary-color: #e28214;
-    --secondary-color: #ff4081;
+    --primary-color: #f5a623;    
+    --secondary-color: #ff7b00;   
     --success-color: #4caf50;
     --error-color: #f44336;
     --dark-bg: #121212;
-    --card-bg: #1e1e1e;
+    --card-bg: rgba(255, 255, 255, 0.1);  
     --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --border-radius: 16px;
+    --border-radius: 15px;       
 }
 
 html, body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
     height: 100%;
     min-height: 100vh;
     box-sizing: border-box;
-    overflow: hidden; /* evita scroll extra */
+    overflow: auto;
+    background: linear-gradient(135deg, #333333, #555555);
 }
 
 .container-registro {
     min-height: 100vh;
-    width: 100%; /* Corrigido: era 100vw */
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
-    box-sizing: border-box; /* Garante que o padding não ultrapasse a largura */
-    overflow: auto; /* permite scroll apenas se necessário */
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: linear-gradient(135deg, #333333, #555555);
 }
 
-.registro-fullscreen,
 .registro-content {
     width: 100%;
-    min-height: 100vh;
-    margin: 0;
+    max-width: 500px;
+    min-width: 260px;
+    margin: 20px auto;
     padding: 30px;
-    background-color: var(--card-bg);
-    border-radius: 0;
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     color: var(--text-primary);
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .registro-header {
@@ -56,12 +61,10 @@ html, body {
 
 .registro-header h1 {
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 28px;
     font-weight: 500;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #f5a623;
+    margin-bottom: 20px;
 }
 
 .dicas-button {
@@ -76,11 +79,11 @@ html, body {
     gap: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 10px;
+    margin: 0 auto;
 }
 
 .dicas-button:hover {
-    background: rgba(63, 81, 181, 0.1);
+    background: rgba(245, 166, 35, 0.1);
 }
 
 .dicas-container {
@@ -111,7 +114,6 @@ html, body {
     margin-bottom: 8px;
 }
 
-/* Container da câmera */
 .camera-container {
     background: rgba(255, 255, 255, 0.05);
     border-radius: var(--border-radius);
@@ -214,29 +216,31 @@ html, body {
     width: 100%;
 }
 
-/* Botões */
 .camera-button {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    width: 100%;
+    padding: 15px;
     border: none;
     border-radius: 30px;
-    padding: 15px 30px;
-    color: white;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    background: linear-gradient(135deg, #f5a623, #ff7b00);
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 64, 129, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .camera-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 64, 129, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .capture-button {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, #f5a623, #ff7b00);
     border: none;
     padding: 20px;
     height: 70px;
@@ -247,11 +251,12 @@ html, body {
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 64, 129, 0.3);
+    box-shadow: 0 4px 15px rgba(255, 123, 0, 0.3);
 }
 
 .capture-button:hover {
     transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 123, 0, 0.4);
 }
 
 .control-button {
@@ -273,7 +278,6 @@ html, body {
     color: #ff4d4d;
 }
 
-/* Preview da foto */
 .foto-preview {
     width: 100%;
     display: flex;
@@ -318,7 +322,7 @@ html, body {
 }
 
 .action-button.retry {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     color: white;
 }
 
@@ -327,28 +331,24 @@ html, body {
 }
 
 .action-button.confirm {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, #f5a623, #ff7b00);
     color: white;
 }
 
 .action-button.confirm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 64, 129, 0.3);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Mensagens de erro e sucesso */
 .erro-message {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.5s ease-in-out;
     background: rgba(244, 67, 54, 0.1);
     border-radius: 10px;
     padding: 15px;
-    margin: 15px 0;
     border-left: 4px solid var(--error-color);
-    animation: fadeIn 0.5s ease;
-}
-
-.erro-message p {
-    margin: 0;
-    color: var(--error-color);
 }
 
 .sucesso-message {
@@ -358,9 +358,11 @@ html, body {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 15px 0;
+    color: #51cf66;
+    font-size: 14px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.5s ease-in-out;
     border-left: 4px solid var(--success-color);
-    animation: fadeIn 0.5s ease;
 }
 
 .sucesso-icon {
@@ -387,7 +389,6 @@ html, body {
     margin-bottom: 20px;
 }
 
-/* Status info */
 .status-info {
     display: flex;
     justify-content: center;
@@ -396,13 +397,11 @@ html, body {
     margin-top: 10px;
 }
 
-/* Utilitários */
 .invisible {
     opacity: 0.5;
     pointer-events: none;
 }
 
-/* Animações */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -432,11 +431,13 @@ html, body {
 @media (max-width: 768px) {
     .registro-content {
         padding: 20px;
+        margin: 10px auto; 
+        max-width: 95%; 
     }
 
     .registro-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
         gap: 15px;
     }
 
@@ -454,8 +455,15 @@ html, body {
     }
 
     .camera-controls {
+        flex-direction: row; 
+        justify-content: space-between;
         flex-wrap: wrap;
         gap: 10px;
+    }
+
+    .control-button {
+        padding: 8px 16px; 
+        font-size: 0.85rem; 
     }
 
     .capture-button {
@@ -465,9 +473,10 @@ html, body {
 
     .foto-actions {
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
+        width: 100%;
     }
-    
+
     .action-button {
         max-width: 100%;
         width: 100%;
@@ -479,6 +488,11 @@ html, body {
         padding: 15px;
     }
 
+    .container-registro {
+        padding: 10px;
+        align-items: flex-start;
+    }
+
     .camera-container {
         padding: 10px;
     }
@@ -488,7 +502,26 @@ html, body {
     }
 
     .face-guide {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
+    }
+
+    .camera-controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .control-button,
+    .camera-button {
+        width: auto;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .capture-button {
+        height: 50px;
+        width: 50px;
     }
 }

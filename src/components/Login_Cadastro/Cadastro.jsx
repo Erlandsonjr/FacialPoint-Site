@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { FaUser, FaLock, FaCheckCircle } from "react-icons/fa"; // Adicione FaCheckCircle
+import { FaUser, FaLock, FaCheckCircle } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
 import "./Login_Cadastro.css";
-import LoadingSpinner from "./LoadingSpinner"; // Importação do componente LoadingSpinner
-import ReactDOM from 'react-dom'; // Adicione esta importação no topo do arquivo
+import LoadingSpinner from "./LoadingSpinner"; 
+import ReactDOM from 'react-dom'; 
 
 function Cadastro() {
     const [username, setUsername] = useState("");

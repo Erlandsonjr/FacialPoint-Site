@@ -189,26 +189,25 @@ body {
     animation: fadeIn 0.5s ease-in-out;
 }
 
-/* Loading Spinner Overlay */
 .loading-spinner-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5); /* Fundo escurecido */
+    background-color: rgba(0, 0, 0, 0.5); 
     display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    align-items: center; /* Centraliza verticalmente */
+    justify-content: center; 
+    align-items: center; 
     z-index: 9999;
 }
 
 .loading-content {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centraliza horizontalmente */
-    justify-content: center; /* Centraliza verticalmente */
-    gap: 20px; /* Espaçamento entre os elementos */
+    align-items: center; 
+    justify-content: center; 
+    gap: 20px; 
 }
 
 .spinner-container {
@@ -216,8 +215,8 @@ body {
     width: 120px;
     height: 120px;
     display: flex;
-    justify-content: center; /* Centraliza horizontalmente */
-    align-items: center; /* Centraliza verticalmente */
+    justify-content: center;
+    align-items: center; 
     margin: 0 auto;
 }
 
@@ -290,7 +289,6 @@ body {
     animation-delay: 0.4s;
 }
 
-/* Confirmation Overlay */
 .confirmation-overlay {
     position: fixed;
     top: 0;
@@ -383,7 +381,6 @@ body {
     background: linear-gradient(135deg, #ff7b00, #f5a623);
 }
 
-/* Keyframes */
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -474,7 +471,6 @@ body {
     }
 }
 
-/* Loading Spinner Overlay */
 .loading-spinner-overlay {
     position: fixed;
     top: 0;
