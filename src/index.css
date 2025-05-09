@@ -1,12 +1,21 @@
-:root {
-  font-family: 'Roboto', sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
+:root {
+  /* Sistema de tipografia */
+  --font-primary: 'Poppins', sans-serif;
+  --font-secondary: 'Inter', sans-serif;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Cores existentes e outras variáveis */
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #333333; 
+  background-color: #333333;
 
+  /* Melhorias de renderização */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,14 +23,14 @@
 }
 
 a {
-  font-weight: 500;
-  color: #f5a623; 
+  font-weight: var(--font-weight-medium);
+  color: #f5a623;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 a:hover {
-  color: #ff7b00; 
+  color: #ff7b00;
 }
 
 html {
@@ -37,29 +46,51 @@ body {
   height: 100%;
   min-height: 100vh;
   box-sizing: border-box;
+  font-family: var(--font-secondary);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  color: #f5a623; 
+  font-size: 2.8rem;
+  color: #f5a623;
+  margin-bottom: 0.5em;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 0.75em;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75em;
 }
 
 button {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #f5a623; 
+  background-color: #f5a623;
   color: white;
   cursor: pointer;
   transition: background-color 0.25s, transform 0.2s;
 }
 
 button:hover {
-  background-color: #ff7b00; 
+  background-color: #ff7b00;
   transform: scale(1.05);
 }
 

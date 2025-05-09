@@ -1,4 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 :root {
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Inter', sans-serif;
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+  
     --primary-color: #f5a623;    
     --secondary-color: #ff7b00;   
     --success-color: #4caf50;
@@ -12,7 +22,8 @@
 
 html, body {
     margin: 0;
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-secondary);
+    letter-spacing: 0.01em;
     height: 100%;
     min-height: 100vh;
     box-sizing: border-box;
@@ -62,7 +73,9 @@ html, body {
 .registro-header h1 {
     margin: 0;
     font-size: 28px;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-primary);
+    letter-spacing: -0.02em;
     color: #f5a623;
     margin-bottom: 20px;
 }
@@ -80,6 +93,8 @@ html, body {
     cursor: pointer;
     transition: all 0.3s ease;
     margin: 0 auto;
+    font-family: var(--font-secondary);
+    font-weight: var(--font-weight-medium);
 }
 
 .dicas-button:hover {
@@ -102,6 +117,9 @@ html, body {
     margin-top: 0;
     color: var(--text-primary);
     font-size: 1.1rem;
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.01em;
 }
 
 .dicas-container ul {

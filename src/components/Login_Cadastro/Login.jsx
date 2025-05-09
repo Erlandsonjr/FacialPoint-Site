@@ -30,10 +30,11 @@ const Login = () => {
                 throw new Error(data.erro || "Erro ao realizar login");
             }
 
-            localStorage.setItem("token", data.token);
-            console.log("Login realizado com sucesso!");
-
-            navigate("/registro");
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+                console.log("Login realizado com sucesso!");
+                navigate("/home"); 
+            }
 
         } catch (error) {
             setErro(error.message);

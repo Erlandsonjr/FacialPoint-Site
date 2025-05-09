@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 body {
     margin: 0;
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-secondary), sans-serif;
+    font-weight: var(--font-weight-regular);
     background: linear-gradient(135deg, #333333, #555555); 
     color: #fff;
     padding: 0;
@@ -43,7 +46,10 @@ body {
 }
 
 .container h1 {
+    font-family: var(--font-primary), sans-serif;
     font-size: 28px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
     margin-bottom: 20px;
     color: #f5a623; 
 }
@@ -61,7 +67,9 @@ body {
     border-radius: 30px;
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
+    font-family: var(--font-secondary), sans-serif;
     font-size: 16px;
+    letter-spacing: 0.01em;
     outline: none;
     transition: all 0.3s ease;
     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
@@ -148,7 +156,10 @@ body {
     border-radius: 30px;
     background: linear-gradient(135deg, #f5a623, #ff7b00);
     color: #fff;
+    font-family: var(--font-primary), sans-serif;
     font-size: 16px;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.01em;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -260,6 +271,9 @@ body {
 }
 
 .loading-message p {
+    font-family: var(--font-primary), sans-serif;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.01em;
     font-size: 1.4rem;
     font-weight: 500;
     color: #ffffff;
@@ -353,6 +367,9 @@ body {
 }
 
 .confirmation-message {
+    font-family: var(--font-primary), sans-serif;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.01em;
     color: #fff;
     font-size: 1.5rem;
     font-weight: 500;
@@ -497,6 +514,9 @@ body {
 }
 
 .loading-message p {
+    font-family: var(--font-primary), sans-serif;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.01em;
     color: #fff;
     font-size: 1.2rem;
     margin: 0;

@@ -1,7 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --font-primary: 'Poppins', sans-serif;
+  --font-secondary: 'Inter', sans-serif;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
 * {
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
   box-sizing: border-box;
   color: white;
+}
+
+body {
+  font-family: var(--font-secondary);
+  font-weight: var(--font-weight-regular);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-medium);
 }
