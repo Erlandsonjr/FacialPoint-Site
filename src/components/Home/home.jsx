@@ -31,7 +31,7 @@ function Home() {
                 console.log("Token payload:", payload);
                 
                 try {
-                    const userDetailResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/usuarios/${payload.id}`, {
+                    const userDetailResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/usuarios/${payload._id}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -57,7 +57,7 @@ function Home() {
                             } else {
                                 const defaultUser = {
                                     email: payload.email,
-                                    _id: payload.id,
+                                    _id: payload._id,
                                     nome: localStorage.getItem('userName') || 'Usuário'  // Remover email como fallback
                                 };
                                 setUserData(defaultUser);
@@ -320,16 +320,16 @@ function Home() {
 
     const getUserDisplayName = () => {
         console.log("userData no getUserDisplayName:", userData);
-        
+
         if (!userData) return 'Usuário';
-        
+
+        // Use apenas o campo 'nome', conforme definido no schema
         if (userData.nome) return userData.nome;
-        if (userData.Nome) return userData.Nome;
-        if (userData.name) return userData.name;
-        
+
+        // Fallback para o nome armazenado no localStorage, se existir
         const storedName = localStorage.getItem('userName');
         if (storedName) return storedName;
-        
+
         return 'Usuário';
     };
 
