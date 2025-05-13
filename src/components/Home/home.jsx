@@ -14,10 +14,119 @@ function Home() {
     const [attendanceData, setAttendanceData] = useState([]);
     const [chartLabels, setChartLabels] = useState([]);
     const [chartKey, setChartKey] = useState(0);
+    const [currentServerTime, setCurrentServerTime] = useState(null);
     const navigate = useNavigate();
+
+    // Adicione uma ref para controlar se os dados já foram carregados
+    const userDataFetched = React.useRef(false);
+
+    const userDisplayName = React.useMemo(() => {
+        if (!userData) return 'Usuário';
+        if (userData.nome) return userData.nome;
+        
+        const storedName = localStorage.getItem('userName');
+        if (storedName) return storedName;
+        
+        return 'Usuário';
+    }, [userData]); // Recalcula apenas quando userData mudar
 
     useEffect(() => {
         const fetchUserData = async () => {
+            // Evita requisições repetidas
+            if (userDataFetched.current) {
+                console.log("Dados do usuário já foram carregados, ignorando nova requisição");
+                return;
+            }
+
+            try {
+                // Obter horário oficial de Brasília do próprio backend
+                const timeResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/horario-brasilia');
+                
+                if (!timeResponse.ok) {
+                    throw new Error(`Erro ao obter horário inicial: ${timeResponse.status}`);
+                }
+                
+                const timeData = await timeResponse.json();
+                console.log("Resposta do servidor (horário):", timeData);
+
+                // Verificação mais robusta do formato da resposta
+                let serverTime = null;
+                
+                // Depuração detalhada dos campos
+                console.log("Campos disponíveis:", {
+                    hasComponents: timeData && typeof timeData.components !== 'undefined',
+                    components: timeData?.components,
+                    hasIsoString: timeData && typeof timeData.isoString !== 'undefined',
+                    isoString: timeData?.isoString,
+                    hasTimestamp: timeData && typeof timeData.timestamp !== 'undefined',
+                    timestamp: timeData?.timestamp,
+                });
+
+                // Prioridade 1: Usar components se disponível e válido
+                if (timeData && timeData.components && 
+                    typeof timeData.components.year === 'number' && 
+                    typeof timeData.components.month === 'number') {
+                    
+                    const components = timeData.components;
+                    serverTime = new Date(
+                        components.year,
+                        components.month - 1, // Converter mês baseado em 1 para baseado em 0
+                        components.day,
+                        components.hour,
+                        components.minute,
+                        components.second
+                    );
+                    console.log('Horário criado a partir de components:', serverTime);
+                }
+                // Prioridade 2: Usar isoString se disponível e válido
+                else if (timeData && timeData.isoString && typeof timeData.isoString === 'string') {
+                    serverTime = new Date(timeData.isoString);
+                    console.log('Horário criado a partir de isoString:', serverTime);
+                }
+                // Prioridade 3: Usar timestamp se disponível e válido
+                else if (timeData && timeData.timestamp && typeof timeData.timestamp === 'number') {
+                    serverTime = new Date(timeData.timestamp);
+                    console.log('Horário criado a partir de timestamp:', serverTime);
+                }
+                // Prioridade 4: Se não encontrar formato conhecido mas tiver dados, use como fallback
+                else if (timeData) {
+                    console.warn('Formato não reconhecido, tentando usar qualquer dado disponível:', timeData);
+                    
+                    // Tentar usar a resposta diretamente
+                    if (typeof timeData === 'string') {
+                        serverTime = new Date(timeData);
+                    }
+                    // Tentar como se fosse um objeto Date serializado
+                    else if (timeData.toISOString || timeData.getTime) {
+                        serverTime = new Date(timeData.toISOString ? timeData.toISOString() : timeData.getTime());
+                    } 
+                    // Último recurso: usar data atual
+                    else {
+                        console.warn('Usando horário local como fallback');
+                        serverTime = new Date();
+                    }
+                }
+                else {
+                    throw new Error('Formato de resposta do servidor não reconhecido');
+                }
+
+                if (!serverTime || isNaN(serverTime.getTime())) {
+                    console.error("Data inválida criada:", serverTime);
+                    throw new Error("Não foi possível criar um objeto Date válido");
+                }
+
+                setCurrentServerTime(serverTime);
+                console.log('Horário inicial obtido do servidor:', serverTime);
+                
+                // Continuar com o restante do código...
+            } catch (error) {
+                console.error('Erro crítico ao obter horário inicial:', error);
+                console.warn('Usando horário local como fallback de emergência');
+                setCurrentServerTime(new Date()); // Usar horário local como fallback de emergência
+                // Continue com a execução mesmo com erro para não bloquear completamente o usuário
+            }
+            
+            // Resto do código existente...
             try {
                 const token = localStorage.getItem('token');
                 
@@ -30,55 +139,41 @@ function Home() {
                 const payload = JSON.parse(atob(tokenParts[1]));
                 console.log("Token payload:", payload);
                 
+                // Limite a uma única abordagem para obter dados do usuário
+                // (em vez de tentar múltiplos endpoints)
                 try {
-                    const userDetailResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/usuarios/${payload._id}`, {
+                    const userResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/me', {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
                     
-                    if (userDetailResponse.ok) {
-                        const userDetailData = await userDetailResponse.json();
-                        console.log("Dados obtidos por ID:", userDetailData);
-                        setUserData(userDetailData);
+                    if (userResponse.ok) {
+                        const userData = await userResponse.json();
+                        console.log("Dados de usuário obtidos com sucesso:", userData);
+                        setUserData(userData);
                     } else {
-                        const userResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/me', {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        
-                        if (userResponse.ok) {
-                            const userData = await userResponse.json();
-                            console.log("Dados obtidos por /me:", userData);
-                            
-                            if (userData && userData.nome) {
-                                setUserData(userData);
-                            } else {
-                                const defaultUser = {
-                                    email: payload.email,
-                                    _id: payload._id,
-                                    nome: localStorage.getItem('userName') || 'Usuário'  // Remover email como fallback
-                                };
-                                setUserData(defaultUser);
-                            }
-                        } else {
-                            const defaultUser = {
-                                email: payload.email,
-                                _id: payload.id,
-                                nome: localStorage.getItem('userName') || 'Usuário'  // Remover email como fallback
-                            };
-                            setUserData(defaultUser);
-                        }
+                        console.warn("Erro ao obter dados do usuário. Usando informações do token.");
+                        const defaultUser = {
+                            email: payload.email,
+                            _id: payload._id,
+                            nome: localStorage.getItem('userName') || 'Usuário'  
+                        };
+                        setUserData(defaultUser);
                     }
+                    
+                    // Marcar que os dados foram carregados
+                    userDataFetched.current = true;
                 } catch (error) {
                     console.error("Erro ao buscar dados de usuário:", error);
+                    // Usar dados do token como fallback
                     const defaultUser = {
                         email: payload.email,
-                        _id: payload.id,
-                        nome: localStorage.getItem('userName') || 'Usuário'  // Remover email como fallback
+                        _id: payload._id,
+                        nome: localStorage.getItem('userName') || 'Usuário' 
                     };
                     setUserData(defaultUser);
+                    userDataFetched.current = true;
                 }
                 
                 const attendanceResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/frequencias/minhas', {
@@ -146,37 +241,181 @@ function Home() {
         };
     }, []);
     
-    const processAttendanceData = (data) => {
-        if (!Array.isArray(data)) {
-            console.error("Dados de frequência inválidos:", data);
-            setError("Formato de dados de frequência inválido");
+    // Substitua o useEffect de atualização de horário existente por este
+
+    // Modificação do efeito para atualização de horário - com estratégia eficiente
+    useEffect(() => {
+        let localTimer;
+        let syncTimer;
+        let localTime = null;
+        
+        // Função para sincronizar com o servidor
+        const syncWithServer = async () => {
+            try {
+                // Adicionar parâmetro para evitar cache
+                const timeResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/horario-brasilia?t=${Date.now()}`);
+                
+                if (!timeResponse.ok) {
+                    throw new Error(`Erro ao atualizar horário: ${timeResponse.status}`);
+                }
+                
+                const timeData = await timeResponse.json();
+                console.log("Atualização de horário recebida:", timeData);
+                
+                let serverTime = null;
+                
+                // Prioridade 1: Usar o formato antigo com horario
+                if (timeData && timeData.horario) {
+                    serverTime = new Date(timeData.horario);
+                    console.log('Horário sincronizado do servidor:', serverTime);
+                }
+                // Prioridade 2: Usar components se disponível
+                else if (timeData && timeData.components && 
+                    typeof timeData.components.year === 'number' && 
+                    typeof timeData.components.month === 'number') {
+                    
+                    const components = timeData.components;
+                    serverTime = new Date(
+                        components.year,
+                        components.month - 1,
+                        components.day,
+                        components.hour,
+                        components.minute,
+                        components.second
+                    );
+                    console.log('Horário criado a partir de components:', serverTime);
+                }
+                // Prioridade 3: Usar isoString se disponível
+                else if (timeData && timeData.isoString && typeof timeData.isoString === 'string') {
+                    serverTime = new Date(timeData.isoString);
+                    console.log('Horário criado a partir de isoString:', serverTime);
+                }
+                // Prioridade 4: Usar timestamp se disponível
+                else if (timeData && timeData.timestamp && typeof timeData.timestamp === 'number') {
+                    serverTime = new Date(timeData.timestamp);
+                    console.log('Horário criado a partir de timestamp:', serverTime);
+                } else {
+                    throw new Error('Formato de resposta do servidor não reconhecido');
+                }
+                
+                // Atualizar o horário local com o do servidor
+                localTime = serverTime;
+                setCurrentServerTime(serverTime);
+            } catch (err) {
+                console.error('Erro ao atualizar horário do servidor:', err);
+                // Não mostra erro na interface para não sobrecarregar com mensagens
+            }
+        };
+        
+        // Função para incrementar o horário localmente a cada segundo
+        const updateLocalTime = () => {
+            if (localTime) {
+                // Incrementa o horário local em 1 segundo
+                localTime = new Date(localTime.getTime() + 1000);
+                setCurrentServerTime(new Date(localTime));
+            }
+        };
+
+        // Sincronizar com o servidor inicialmente
+        syncWithServer();
+        
+        // Configurar os dois timers:
+        // 1. Atualização local (a cada segundo)
+        localTimer = setInterval(updateLocalTime, 1000);
+        
+        // 2. Sincronização com o servidor (a cada 30 segundos)
+        syncTimer = setInterval(syncWithServer, 30000);
+        
+        // Limpeza dos timers na desmontagem do componente
+        return () => {
+            clearInterval(localTimer);
+            clearInterval(syncTimer);
+        };
+    }, []); // Sem dependências para executar apenas na montagem
+    
+    // Modificação da função processAttendanceData - sem fallback
+    const processAttendanceData = async (data) => {
+        // Usar a data do servidor já obtida anteriormente
+        let today = currentServerTime;
+        
+        // Substitua na função processAttendanceData
+        if (!today) {
+            try {
+                const timeResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/horario-brasilia?t=${Date.now()}`);
+                
+                if (!timeResponse.ok) {
+                    throw new Error(`Erro ao obter horário: ${timeResponse.status}`);
+                }
+                
+                const timeData = await timeResponse.json();
+                let serverTime;
+                
+                if (timeData.components) {
+                    const components = timeData.components;
+                    serverTime = new Date(
+                        components.year,
+                        components.month - 1, // Converter mês baseado em 1 para baseado em 0
+                        components.day,
+                        components.hour,
+                        components.minute,
+                        components.second
+                    );
+                }
+                else if (timeData.isoString) {
+                    serverTime = new Date(timeData.isoString);
+                }
+                else if (timeData.timestamp) {
+                    serverTime = new Date(timeData.timestamp);
+                }
+                else {
+                    throw new Error('Formato de resposta do servidor não reconhecido');
+                }
+                
+                today = serverTime;
+                setCurrentServerTime(today);
+                console.log('Horário obtido para processamento:', today);
+            } catch (error) {
+                console.error('Falha ao obter horário do servidor para processamento:', error);
+                setError(prev => prev ? `${prev}. Dados baseados no último horário disponível.` : 'Não foi possível sincronizar com o horário do servidor.');
+                
+                if (!currentServerTime) {
+                    console.error('Sem horário de referência disponível. Não é possível processar dados.');
+                    setAttendanceData([]);
+                    setChartLabels([]);
+                    return;
+                }
+                
+                today = currentServerTime;
+            }
+        }
+        
+        // Se não tiver horário, não continua o processamento
+        if (!today) {
+            console.error('Sem horário de referência disponível. Dados não processados.');
+            setAttendanceData([]);
+            setChartLabels([]);
             return;
         }
         
-        if (data.length === 0) {
-            console.log("Usuário não possui registros de frequência");
-            setError("Você ainda não possui registros de frequência");
-        }
-        
-        const today = new Date();
+        // Resto do processamento permanece igual
         const lastSevenDays = [];
-        
         for (let i = 6; i >= 0; i--) {
-            const date = new Date();
+            const date = new Date(today);
             date.setDate(today.getDate() - i);
+            
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
             lastSevenDays.push(formattedDate);
         }
         
+        // Resto do código...
         const processedData = lastSevenDays.map(date => {
             const record = data.find(item => {
-                if (!item || !item.data) {
-                    return false;
-                }
+                if (!item || !item.data) return false;
                 
                 try {
                     const itemDate = new Date(item.data);
                     const formattedItemDate = `${itemDate.getDate().toString().padStart(2, '0')}/${(itemDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                    
                     return formattedItemDate === date;
                 } catch (error) {
                     console.error("Erro ao processar data:", error, item);
@@ -190,6 +429,8 @@ function Home() {
                 try {
                     const recordTime = new Date(record.horario);
                     hourValue = recordTime.getHours();
+                    
+                    console.log(`Registro original: ${record.horario}, Hora: ${hourValue}`);
                 } catch (error) {
                     console.error("Erro ao processar horário:", error, record);
                 }
@@ -318,21 +559,6 @@ function Home() {
         }
     };
 
-    const getUserDisplayName = () => {
-        console.log("userData no getUserDisplayName:", userData);
-
-        if (!userData) return 'Usuário';
-
-        // Use apenas o campo 'nome', conforme definido no schema
-        if (userData.nome) return userData.nome;
-
-        // Fallback para o nome armazenado no localStorage, se existir
-        const storedName = localStorage.getItem('userName');
-        if (storedName) return storedName;
-
-        return 'Usuário';
-    };
-
     if (loading) return (
         <div className="home-loading">
             <div className="loading-spinner"></div>
@@ -366,8 +592,20 @@ function Home() {
             
             <main className="home-content">
                 <div className="welcome-section">
-                    <h1>Bem Vindo, <span className="user-name">{getUserDisplayName()}!</span></h1>
-                    <p className="date-info">Hoje é {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <h1>Bem Vindo, <span className="user-name">{userDisplayName}!</span></h1>
+                    <p className="date-info">
+                        Hoje é {(() => {
+                            // Usa o horário do servidor se disponível
+                            const dataReferencia = currentServerTime || new Date();
+                            const options = { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric'
+                            };
+                            return dataReferencia.toLocaleDateString('pt-BR', options);
+                        })()}
+                    </p>
                 </div>
                 
                 {error && <div className="error-message">{error}</div>}
@@ -377,6 +615,8 @@ function Home() {
                         <p>Você ainda não registrou presença esta semana. Utilize a função "Registrar Ponto" para começar.</p>
                     </div>
                 )}
+
+        
                 
                 <div className="dashboard-grid">
                     <div className="chart-container hours-chart">

@@ -8,6 +8,7 @@ import Login from './components/Login_Cadastro/Login.jsx'
 import Cadastro from './components/Login_Cadastro/Cadastro.jsx'
 import RegistroPonto from './components/Registro/registro.jsx';
 import Home from './components/Home/home.jsx';
+import Perfil from './components/Perfil/Perfil.jsx';
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "home",
         element: <Home />,
+      },
+      {
+        path: "perfil",
+        element: <Perfil />,
       },
     ]
   },
