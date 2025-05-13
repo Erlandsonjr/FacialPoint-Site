@@ -1,7 +1,7 @@
 import { FaUser, FaLock } from "react-icons/fa";
 import { useState } from "react";
 import "./Login_Cadastro.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Importe sua logo PNG
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -44,38 +44,49 @@ const Login = () => {
     };
 
     return (
-        <div className="container">
-            {carregando && (
-                <div className="loading-overlay"></div>
-            )}
-            <form onSubmit={handleSubmit}>
-                <h1>Acesse o sistema</h1>
-
-                {erro && <p className="erro">{erro}</p>} {}
-
-                <div className="input-field">
-                    <input
-                        type="email"
-                        placeholder="E-mail"
-                        required
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <FaUser className="icon" />
+        <div className="page-container">
+            {/* Cabeçalho com logo e título FORA da caixa de login */}
+            <div className="app-header">
+                <div className="logo-container">
+                    <img src="/logo.png" alt="FacePonto Logo" className="logo-image" />
                 </div>
+                <h1 className="app-title">FacePonto</h1>
+            </div>
+            
+            <div className="container">
+                {carregando && (
+                    <div className="loading-overlay"></div>
+                )}
+                
+                <form onSubmit={handleSubmit}>
+                    <h1>Acesse o sistema</h1>
 
-                <div className="input-field">
-                    <input
-                        type="password"
-                        placeholder="Senha"
-                        required
-                        onChange={(e) => setSenha(e.target.value)}
-                    />
-                </div>
+                    {erro && <p className="erro">{erro}</p>}
 
-                <button type="submit">Entrar</button>
+                    <div className="input-field">
+                        <input
+                            type="email"
+                            placeholder="E-mail"
+                            required
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <FaUser className="icon" />
+                    </div>
 
-                <p>Não possui conta ainda? <Link to="/cadastro">Cadastre-se</Link></p>
-            </form>
+                    <div className="input-field">
+                        <input
+                            type="password"
+                            placeholder="Senha"
+                            required
+                            onChange={(e) => setSenha(e.target.value)}
+                        />
+                    </div>
+
+                    <button type="submit">Entrar</button>
+
+                    <p>Não possui conta ainda? <Link to="/cadastro">Cadastre-se</Link></p>
+                </form>
+            </div>
         </div>
     );
 };

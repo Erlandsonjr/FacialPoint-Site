@@ -166,7 +166,6 @@ function Home() {
                     userDataFetched.current = true;
                 } catch (error) {
                     console.error("Erro ao buscar dados de usuário:", error);
-                    // Usar dados do token como fallback
                     const defaultUser = {
                         email: payload.email,
                         _id: payload._id,
@@ -176,9 +175,14 @@ function Home() {
                     userDataFetched.current = true;
                 }
                 
-                const attendanceResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/frequencias/minhas', {
+                // Adicione parâmetros para evitar cache
+                const timestamp = Date.now();
+                const attendanceResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/frequencias/minhas?nocache=${timestamp}`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     }
                 });
                 
@@ -241,9 +245,6 @@ function Home() {
         };
     }, []);
     
-    // Substitua o useEffect de atualização de horário existente por este
-
-    // Modificação do efeito para atualização de horário - com estratégia eficiente
     useEffect(() => {
         let localTimer;
         let syncTimer;
@@ -333,116 +334,157 @@ function Home() {
         };
     }, []); // Sem dependências para executar apenas na montagem
     
-    // Modificação da função processAttendanceData - sem fallback
+    // Modifique a função processAttendanceData para melhor compatibilidade com sua API
     const processAttendanceData = async (data) => {
-        // Usar a data do servidor já obtida anteriormente
-        let today = currentServerTime;
-        
-        // Substitua na função processAttendanceData
-        if (!today) {
-            try {
-                const timeResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/horario-brasilia?t=${Date.now()}`);
-                
-                if (!timeResponse.ok) {
-                    throw new Error(`Erro ao obter horário: ${timeResponse.status}`);
-                }
-                
-                const timeData = await timeResponse.json();
-                let serverTime;
-                
-                if (timeData.components) {
-                    const components = timeData.components;
-                    serverTime = new Date(
-                        components.year,
-                        components.month - 1, // Converter mês baseado em 1 para baseado em 0
-                        components.day,
-                        components.hour,
-                        components.minute,
-                        components.second
-                    );
-                }
-                else if (timeData.isoString) {
-                    serverTime = new Date(timeData.isoString);
-                }
-                else if (timeData.timestamp) {
-                    serverTime = new Date(timeData.timestamp);
-                }
-                else {
-                    throw new Error('Formato de resposta do servidor não reconhecido');
-                }
-                
-                today = serverTime;
-                setCurrentServerTime(today);
-                console.log('Horário obtido para processamento:', today);
-            } catch (error) {
-                console.error('Falha ao obter horário do servidor para processamento:', error);
-                setError(prev => prev ? `${prev}. Dados baseados no último horário disponível.` : 'Não foi possível sincronizar com o horário do servidor.');
-                
-                if (!currentServerTime) {
-                    console.error('Sem horário de referência disponível. Não é possível processar dados.');
-                    setAttendanceData([]);
-                    setChartLabels([]);
-                    return;
-                }
-                
-                today = currentServerTime;
-            }
+        // Adicione logo no início da função processAttendanceData para verificar o registro mencionado:
+        const specificRecord = data.find(item => 
+            item.data && item.data.includes("2025-05-13") || 
+            item.horario && item.horario.includes("2025-05-13"));
+
+        if (specificRecord) {
+            console.log("✓ ENCONTRADO o registro de 13/05/2025:", specificRecord);
+        } else {
+            console.log("✗ NÃO ENCONTRADO registro de 13/05/2025 - verifique se ele está realmente na resposta da API");
         }
+
+        // Imprimir os dados recebidos para diagnóstico
+        console.log("Dados de frequência brutos recebidos:", JSON.stringify(data, null, 2));
         
-        // Se não tiver horário, não continua o processamento
-        if (!today) {
-            console.error('Sem horário de referência disponível. Dados não processados.');
+        // Verificação se há dados
+        if (!Array.isArray(data) || data.length === 0) {
+            console.warn("Sem dados de frequência para processar");
             setAttendanceData([]);
             setChartLabels([]);
             return;
         }
         
-        // Resto do processamento permanece igual
+        // Usar a data do servidor já obtida anteriormente
+        let today = currentServerTime;
+        
+        if (!today) {
+            try {
+                // Código existente para obter horário...
+                today = new Date(); // Fallback
+            } catch (error) {
+                console.error('Falha ao obter horário:', error);
+                today = new Date();
+            }
+        }
+        
+        // Gerar array com os últimos 7 dias
         const lastSevenDays = [];
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(today.getDate() - i);
             
+            // Formatar apenas para display
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            lastSevenDays.push(formattedDate);
+            lastSevenDays.push({
+                dateObj: new Date(date), // Guardar o objeto Date completo
+                formatted: formattedDate  // String formatada para display
+            });
         }
         
-        // Resto do código...
-        const processedData = lastSevenDays.map(date => {
+        console.log("Últimos 7 dias para processamento:", lastSevenDays.map(d => ({
+            formatted: d.formatted,
+            fullDate: d.dateObj.toISOString()
+        })));
+        
+        // Processar os dados para cada dia com uma lógica mais robusta
+        const processedData = lastSevenDays.map(dateInfo => {
+            // Para cada dia, vamos verificar se há registro correspondente
+            const dateToCheck = dateInfo.dateObj;
+            
+            // Extrair apenas a data (sem considerar a hora)
+            const yearToCheck = dateToCheck.getFullYear();
+            const monthToCheck = dateToCheck.getMonth(); // 0-11
+            const dayToCheck = dateToCheck.getDate();
+            
+            // Modifique a lógica de busca do registro para ser mais flexível:
             const record = data.find(item => {
-                if (!item || !item.data) return false;
+                if (!item) return false;
                 
                 try {
-                    const itemDate = new Date(item.data);
-                    const formattedItemDate = `${itemDate.getDate().toString().padStart(2, '0')}/${(itemDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                    // Tentar todas as propriedades de data disponíveis
+                    let matches = false;
                     
-                    return formattedItemDate === date;
+                    // Verificar usando o campo data
+                    if (item.data) {
+                        const itemDate = new Date(item.data);
+                        
+                        // 1. Comparação direta de ano, mês, dia
+                        const directMatch = 
+                            itemDate.getUTCFullYear() === yearToCheck &&
+                            itemDate.getUTCMonth() === monthToCheck && 
+                            itemDate.getUTCDate() === dayToCheck;
+                            
+                        // 2. Comparação de string da data (ignore a hora)
+                        const itemDateStr = itemDate.toISOString().split('T')[0];
+                        const checkDateObj = new Date(yearToCheck, monthToCheck, dayToCheck);
+                        const checkDateStr = checkDateObj.toISOString().split('T')[0];
+                        
+                        const strMatch = itemDateStr === checkDateStr;
+                        
+                        if (directMatch || strMatch) {
+                            console.log(`CORRESPONDÊNCIA ENCONTRADA para ${dateInfo.formatted} via campo data`);
+                            matches = true;
+                        }
+                    }
+                    
+                    // Verificar usando o campo horario se ainda não encontrou
+                    if (!matches && item.horario) {
+                        const itemTime = new Date(item.horario);
+                        
+                        const timeMatch = 
+                            itemTime.getUTCFullYear() === yearToCheck &&
+                            itemTime.getUTCMonth() === monthToCheck && 
+                            itemTime.getUTCDate() === dayToCheck;
+                            
+                        if (timeMatch) {
+                            console.log(`CORRESPONDÊNCIA ENCONTRADA para ${dateInfo.formatted} via campo horario`);
+                            matches = true;
+                        }
+                    }
+                    
+                    return matches;
                 } catch (error) {
                     console.error("Erro ao processar data:", error, item);
                     return false;
                 }
             });
             
+            // Extrair a hora do registro encontrado
             let hourValue = 0;
             
-            if (record && record.horario) {
+            if (record) {
+                console.log(`Registro encontrado para ${dateInfo.formatted}:`, record);
+                
                 try {
-                    const recordTime = new Date(record.horario);
-                    hourValue = recordTime.getHours();
-                    
-                    console.log(`Registro original: ${record.horario}, Hora: ${hourValue}`);
+                    if (record.horario) {
+                        const recordTime = new Date(record.horario);
+                        hourValue = recordTime.getHours();
+                        console.log(`Hora extraída do registro: ${hourValue} (${record.horario})`);
+                    } else {
+                        console.log(`Registro sem campo horario, usando valor padrão`);
+                        hourValue = 12; // Valor padrão se não houver horário específico
+                    }
                 } catch (error) {
                     console.error("Erro ao processar horário:", error, record);
+                    hourValue = 12; // Valor padrão em caso de erro
                 }
+            } else {
+                console.log(`Nenhum registro encontrado para ${dateInfo.formatted}`);
             }
             
             return {
-                x: date,
+                x: dateInfo.formatted,
                 y: hourValue
             };
         });
         
-        setChartLabels(lastSevenDays);
+        console.log("Dados processados para gráfico:", processedData);
+        
+        setChartLabels(lastSevenDays.map(d => d.formatted));
         setAttendanceData(processedData);
     };
     

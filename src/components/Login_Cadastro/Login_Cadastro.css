@@ -13,6 +13,7 @@ body {
 
 .page-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;     
@@ -20,7 +21,8 @@ body {
     position: relative;
     padding: 40px 16px;
     box-sizing: border-box;
-    background: linear-gradient(135deg, #333333, #555555); 
+    background: linear-gradient(135deg, #333333, #555555);
+    gap: 30px; /* Espaço entre o cabeçalho e o container de login */
 }
 
 .container {
@@ -520,4 +522,92 @@ body {
     color: #fff;
     font-size: 1.2rem;
     margin: 0;
+}
+
+/* Adicione estes estilos ao final do arquivo */
+
+/* Estilos para o cabeçalho com logo e título */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.7s ease-in-out;
+    max-width: 80%;
+    margin-bottom: 10px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+/* Estilos para a imagem logo */
+.logo-image {
+    width: 60px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.3));
+}
+
+.app-title {
+    font-family: var(--font-primary, 'Poppins'), sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: #f5a623;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.02em;
+}
+
+/* Ajustes responsivos para o cabeçalho */
+@media (max-width: 480px) {
+    .page-container {
+        gap: 20px;
+    }
+    
+    .logo-image {
+        width: 50px;
+    }
+    
+    .app-title {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 380px) {
+    .logo-image {
+        width: 40px;
+    }
+    
+    .app-title {
+        font-size: 28px;
+    }
+}
+
+/* Ajustar o tamanho do título "Acesse o sistema" para não competir com o novo título */
+.container form h1 {
+    font-size: 22px;
+    margin-top: 5px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 380px) {
+    .app-logo {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .logo-icon {
+        font-size: 18px;
+    }
+    
+    .app-title {
+        font-size: 24px;
+    }
+    
+    .container form h1 {
+        font-size: 18px;
+    }
 }
