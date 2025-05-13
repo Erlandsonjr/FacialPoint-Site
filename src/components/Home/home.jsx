@@ -617,11 +617,11 @@ function Home() {
                 </div>
                 
                 <nav className="main-nav">
-                    <Link to="/registro" className="nav-link">
-                        <FaRegClock /> Registrar Ponto
-                    </Link>
                     <Link to="/perfil" className="nav-link">
                         <FaUserCircle /> Perfil
+                    </Link>
+                    <Link to="/controle" className="nav-link">
+                        <FaChartBar /> Relatórios
                     </Link>
                 </nav>
                 
@@ -654,7 +654,7 @@ function Home() {
 
                 {attendanceData.length > 0 && attendanceData.every(item => item.y === 0) && (
                     <div className="info-message">
-                        <p>Você ainda não registrou presença esta semana. Utilize a função "Registrar Ponto" para começar.</p>
+                        <p>Você ainda não possui registros de frequência esta semana. Consulte seus dados históricos em Relatórios.</p>
                     </div>
                 )}
 
@@ -694,13 +694,13 @@ function Home() {
                 </div>
                 
                 <div className="quick-actions">
-                    <Link to="/registro" className="action-card">
-                        <FaRegClock className="action-icon" />
-                        <span>Registrar Ponto</span>
-                    </Link>
                     <Link to="/controle" className="action-card">
                         <FaChartBar className="action-icon" />
-                        <span>Ver Relatórios</span>
+                        <span>Relatórios Detalhados</span>
+                    </Link>
+                    <Link to="/perfil" className="action-card">
+                        <FaUserCircle className="action-icon" />
+                        <span>Gerenciar Perfil</span>
                     </Link>
                 </div>
             </main>

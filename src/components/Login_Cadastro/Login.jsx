@@ -1,7 +1,7 @@
 import { FaUser, FaLock } from "react-icons/fa";
 import { useState } from "react";
 import "./Login_Cadastro.css";
-import { Link, useNavigate } from "react-router-dom"; // Importe sua logo PNG
+import { Link, useNavigate } from "react-router-dom"; 
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -84,7 +84,6 @@ const Login = () => {
 
                     <button type="submit">Entrar</button>
 
-                    <p>Não possui conta ainda? <Link to="/cadastro">Cadastre-se</Link></p>
                 </form>
             </div>
         </div>

@@ -47,6 +47,7 @@
 .main-nav {
     display: flex;
     gap: 20px;
+    justify-content: center;
 }
 
 .nav-link {
@@ -257,7 +258,7 @@
     flex: 1;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
-    padding: 25px;
+    padding: 30px; /* Aumentar padding */
     text-align: center;
     text-decoration: none;
     color: var(--text-primary);
@@ -275,7 +276,7 @@
 }
 
 .action-icon {
-    font-size: 2.5rem;
+    font-size: 3rem; /* Aumentar tamanho do ícone para mais impacto */
     color: #f5a623;
 }
 
