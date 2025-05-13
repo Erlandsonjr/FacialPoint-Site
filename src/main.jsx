@@ -9,6 +9,7 @@ import Cadastro from './components/Login_Cadastro/Cadastro.jsx'
 import RegistroPonto from './components/Registro/registro.jsx';
 import Home from './components/Home/home.jsx';
 import Perfil from './components/Perfil/Perfil.jsx';
+import Admin from './components/AdminDash/admin.jsx';
 
 const router = createBrowserRouter([
   {
@@ -28,13 +29,17 @@ const router = createBrowserRouter([
         element: <RegistroPonto />,
       },
       {
-        path: "home",
+        path: "funcionario/dashboard",
         element: <Home />,
       },
       {
         path: "perfil",
         element: <Perfil />,
       },
+      {
+        path: "admin/dashboard",
+        element: <Admin />,
+      }
     ]
   },
 ])

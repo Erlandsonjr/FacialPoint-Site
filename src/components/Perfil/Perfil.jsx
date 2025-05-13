@@ -246,7 +246,7 @@ function Perfil() {
       {salvando && <LoadingSpinner message="Salvando alterações..." />}
       
       <header className="perfil-header">
-        <Link to="/home" className="voltar-button">
+        <Link to="/funcionario/dashboard" className="voltar-button">
           <FaArrowLeft /> Voltar
         </Link>
         <h1>Seu Perfil</h1>
