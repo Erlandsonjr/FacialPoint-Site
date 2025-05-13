@@ -33,9 +33,8 @@ const Login = () => {
             if (data.token) {
                 localStorage.setItem("token", data.token);
                 console.log("Login realizado com sucesso!");
-                navigate("/home"); 
+                navigate(data.rota); // Redireciona para a rota retornada pela API
             }
-
         } catch (error) {
             setErro(error.message);
         } finally {
