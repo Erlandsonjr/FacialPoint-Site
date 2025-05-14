@@ -10,7 +10,6 @@ function Cadastro() {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [confirmarSenha, setConfirmarSenha] = useState("");
-    const [cpf, setCpf] = useState("");
     const [foto, setFoto] = useState(null);
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState(false);
@@ -36,6 +35,19 @@ function Cadastro() {
         }
 
         try {
+            // Converte a foto para Base64
+            const convertToBase64 = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = (error) => reject(error);
+                });
+            };
+
+            const perfilBase64 = await convertToBase64(foto);
+
+            // Envia a foto para o endpoint de codificação
             const formData = new FormData();
             formData.append("file", foto);
 
@@ -53,14 +65,16 @@ function Cadastro() {
 
             const codificacao = await responseCodificacao.json();
 
+            // Cria o payload com a foto em Base64 no campo perfil
             const payload = {
                 nome: username,
                 email,
                 senha,
-                cpf,
-                foto: codificacao, 
+                foto: codificacao,
+                perfil: perfilBase64, // Adiciona a imagem em Base64
             };
 
+            // Envia o payload para o endpoint de cadastro
             const responseCadastro = await fetch(
                 "https://faceponto-banco-dados-production.up.railway.app/usuarios/cadastro",
                 {
@@ -77,11 +91,11 @@ function Cadastro() {
                 throw new Error(errorData.erro || "Erro ao realizar cadastro.");
             }
 
-            setSucesso(true); 
+            setSucesso(true);
         } catch (error) {
             setErro(error.message);
         } finally {
-            setCarregando(false); 
+            setCarregando(false);
         }
     };
 
@@ -95,18 +109,6 @@ function Cadastro() {
             setFoto(arquivo);
             setFotoNome(arquivo.name);
         }
-    };
-
-    const formatarCpf = (valor) => {
-        valor = valor.replace(/\D/g, "");
-
-        if (valor.length <= 11) {
-            valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-            valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-            valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-        }
-
-        return valor;
     };
 
     return (
@@ -143,16 +145,6 @@ function Cadastro() {
                                 placeholder="Nome completo"
                                 required
                                 onChange={(e) => setUsername(e.target.value)}
-                            />
-                        </div>
-                        <div className="input-field">
-                            <input
-                                type="text"
-                                placeholder="CPF"
-                                required
-                                maxLength="14"
-                                value={cpf}
-                                onChange={(e) => setCpf(formatarCpf(e.target.value))}
                             />
                         </div>
                         <div className="input-field">

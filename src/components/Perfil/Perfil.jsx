@@ -82,14 +82,18 @@ function Perfil() {
         
         <div className="referencia-foto-container">
           <div className="referencia-foto-wrapper">
-            <div className="referencia-foto-placeholder">
-              <FaIdCard size={60} />
-              {temFotoReferencia ? (
-                <span className="referencia-status">Foto de referência cadastrada</span>
-              ) : (
+            {temFotoReferencia && userData.perfil ? (
+              <img
+                src={userData.perfil} // Exibe a imagem Base64
+                alt="Foto de referência"
+                className="referencia-foto"
+              />
+            ) : (
+              <div className="referencia-foto-placeholder">
+                <FaIdCard size={60} />
                 <span className="referencia-status">Nenhuma foto cadastrada</span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
         
