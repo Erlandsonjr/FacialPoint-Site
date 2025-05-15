@@ -1,0 +1,343 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --primary-color: #f5a623;
+    --primary-dark: #ff7b00;
+    --bg-dark: #333;
+    --bg-light: rgba(255, 255, 255, 0.1);
+    --text-primary: #fff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --success: #4caf50;
+    --danger: #f44336;
+    --warning: #ff9800;
+    --info: #2196f3;
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Inter', sans-serif;
+}
+
+.admin-container {
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(135deg, #333333, #555555);
+    color: var(--text-primary);
+    font-family: var(--font-secondary);
+}
+
+.admin-loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #333333, #555555);
+    color: var(--text-primary);
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.admin-header {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 40px;
+    margin-right: 15px;
+}
+
+.logo-container h2 {
+    margin: 0;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.admin-actions {
+    display: flex;
+    gap: 20px;
+}
+
+.logout-button {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    border-radius: 20px;
+    color: var(--text-primary);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background: var(--primary-color);
+    color: #333;
+}
+
+.admin-content {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in;
+}
+
+.admin-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+}
+
+.admin-panel-header h1 {
+    font-family: var(--font-primary);
+    font-size: 1.8rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.register-point-button {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    padding: 12px 20px;
+    font-family: var(--font-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.register-point-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.search-section {
+    margin: 20px 0;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    padding: 0 15px;
+    transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.search-icon {
+    color: var(--text-secondary);
+    margin-right: 10px;
+}
+
+.search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 12px 0;
+    color: var(--text-primary);
+    font-family: var(--font-secondary);
+    font-size: 1rem;
+}
+
+.search-box input:focus {
+    outline: none;
+}
+
+.search-box input::placeholder {
+    color: var(--text-secondary);
+}
+
+.users-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.user-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.user-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--primary-color);
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--primary-color);
+    font-size: 2rem;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-info h3 {
+    margin: 0 0 5px;
+    font-family: var(--font-primary);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.user-info p {
+    margin: 0 0 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.user-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    background-color: rgba(76, 175, 80, 0.2);
+    color: var(--success);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.error-message {
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--danger);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .admin-panel-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .admin-content {
+        padding: 15px;
+    }
+
+    .users-list {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-actions {
+        width: 100%;
+        justify-content: flex-end;
+        display: flex;
+        margin-top: 10px;
+    }
+
+    .logo-container {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* Ajuste para o input de busca não sair da caixa em telas pequenas */
+@media (max-width: 500px) {
+    .search-box {
+        padding: 0 5px;
+    }
+    .search-box input {
+        font-size: 0.95rem;
+        min-width: 0;
+        width: 100%;
+        padding: 10px 0;
+    }
+    .admin-panel-header h1 {
+        font-size: 1.1rem;
+        word-break: break-word;
+    }
+    .admin-header {
+        align-items: stretch;
+    }
+    .admin-actions {
+        justify-content: flex-end;
+    }
+}
