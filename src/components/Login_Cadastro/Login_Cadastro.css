@@ -611,3 +611,26 @@ body {
         font-size: 18px;
     }
 }
+
+/* Garante centralização e evita corte lateral em telas pequenas */
+@media (max-width: 480px) {
+    .page-container {
+        padding: 16px 0 !important;
+        align-items: center !important;
+    }
+    .container {
+        max-width: 98vw !important;
+        min-width: 0 !important;
+        margin: 0 auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 350px) {
+    .container {
+        padding: 8px !important;
+    }
+}

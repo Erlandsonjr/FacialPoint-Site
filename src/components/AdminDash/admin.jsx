@@ -68,7 +68,7 @@ function Admin() {
     };
 
     const handleRegisterPoint = () => {
-        navigate('/admin/registrar-ponto');
+        navigate('/registro');
     };
 
     const handleLogout = () => {
@@ -78,9 +78,19 @@ function Admin() {
 
     if (loading) {
         return (
-            <div className="admin-loading">
-                <div className="loading-spinner"></div>
-                <p>Carregando painel administrativo...</p>
+            <div className="admin-container">
+                <header className="admin-header">
+                    <div className="logo-container">
+                        <img src="/logo.png" alt="FacePonto" className="logo" />
+                        <h2>FacePonto Admin</h2>
+                    </div>
+                </header>
+                <main className="admin-content">
+                    <div className="admin-loading">
+                        <div className="loading-spinner"></div>
+                        <p className="loading-message">Carregando painel administrativo...</p>
+                    </div>
+                </main>
             </div>
         );
     }

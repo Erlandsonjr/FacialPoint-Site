@@ -2,59 +2,66 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   FaCamera,
   FaCheck,
-  FaRedo,
   FaInfoCircle,
-  FaRegLightbulb,
+  FaDesktop,
+  FaUserCircle,
 } from "react-icons/fa";
 import "./registro.css";
 import LoadingSpinner from "../Login_Cadastro/LoadingSpinner";
 import axios from "axios";
+import * as faceapi from "face-api.js";
 
 function RegistroPonto() {
   const [stream, setStream] = useState(null);
   const [foto, setFoto] = useState(null);
+  const [fotoUrl, setFotoUrl] = useState(null);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
-  const [mostrarDicas, setMostrarDicas] = useState(false);
+  const [usuarioReconhecido, setUsuarioReconhecido] = useState("");
   const [permissaoCamera, setPermissaoCamera] = useState("nao-solicitada");
-  const [contadorTempo, setContadorTempo] = useState(0);
-  const [timerAtivo, setTimerAtivo] = useState(false);
-  const [verificacaoCompleta, setVerificacaoCompleta] = useState(false);
   const [serverTime, setServerTime] = useState(null);
+
+  const [modoQuiosque, setModoQuiosque] = useState("inicializando");
+  const [contadorTempo, setContadorTempo] = useState(0);
+  const [faceDetectada, setFaceDetectada] = useState(false);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const timerRef = useRef(null);
+  const feedbackTimerRef = useRef(null);
+  const standbyTimerRef = useRef(null);
+  const detectionRef = useRef(null);
 
   useEffect(() => {
     const inicializacao = async () => {
       setCarregando(true);
-      await fetchServerTime();
-      setVerificacaoCompleta(true);
-      setCarregando(false);
+      try {
+        await carregarModelosFaciais();
+        await fetchServerTime();
+        await iniciarCamera();
+        setModoQuiosque("detectando");
+      } catch (error) {
+        setErro(
+          "Erro ao inicializar o sistema. Por favor, recarregue a página."
+        );
+      } finally {
+        setCarregando(false);
+      }
     };
 
     inicializacao();
 
     return () => {
       pararCamera();
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      limparTodosTimers();
     };
   }, []);
 
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
-
-  // Substitua a função fetchServerTime existente
   const fetchServerTime = async () => {
     try {
-      setCarregando(true);
-
       const timeResponse = await fetch(
         "https://faceponto-banco-dados-production.up.railway.app/horario-brasilia"
       );
@@ -63,91 +70,53 @@ function RegistroPonto() {
         throw new Error(`Erro ao obter horário: ${timeResponse.status}`);
       }
 
-      // Adicione estes logs após obter a resposta json
       const timeData = await timeResponse.json();
-      console.log("Resposta do servidor (formato bruto):", timeData);
-      console.log("Tipo da resposta:", typeof timeData);
-      console.log("Campos presentes:", Object.keys(timeData || {}));
-      console.log("Resposta do servidor (horário):", timeData);
 
-      // Verificação mais robusta do formato da resposta
       let serverTime = null;
 
-      // Prioridade 1: Usar o formato antigo com horario e data
       if (timeData && timeData.horario) {
         serverTime = new Date(timeData.horario);
-        console.log("Horário criado a partir do campo horario:", serverTime);
-      }
-      // Prioridade 2: Usar components se disponível e válido
-      else if (
+      } else if (
         timeData &&
         timeData.components &&
-        typeof timeData.components.year === "number" &&
-        typeof timeData.components.month === "number"
+        typeof timeData.components.year === "number"
       ) {
         const components = timeData.components;
         serverTime = new Date(
           components.year,
-          components.month - 1, // Converter mês baseado em 1 para baseado em 0
+          components.month - 1,
           components.day,
           components.hour,
           components.minute,
           components.second
         );
-        console.log("Horário criado a partir de components:", serverTime);
-      }
-      // Prioridade 3: Usar isoString se disponível e válido
-      else if (
-        timeData &&
-        timeData.isoString &&
-        typeof timeData.isoString === "string"
-      ) {
+      } else if (timeData && timeData.isoString) {
         serverTime = new Date(timeData.isoString);
-        console.log("Horário criado a partir de isoString:", serverTime);
-      }
-      // Prioridade 4: Usar timestamp se disponível e válido
-      else if (
-        timeData &&
-        timeData.timestamp &&
-        typeof timeData.timestamp === "number"
-      ) {
+      } else if (timeData && timeData.timestamp) {
         serverTime = new Date(timeData.timestamp);
-        console.log("Horário criado a partir de timestamp:", serverTime);
       } else {
         throw new Error("Formato de resposta do servidor não reconhecido");
       }
 
-      if (!serverTime || isNaN(serverTime.getTime())) {
-        console.error("Data inválida criada:", serverTime);
-        throw new Error("Não foi possível criar um objeto Date válido");
-      }
-
       setServerTime(serverTime);
-      console.log("Horário obtido do servidor:", serverTime);
+      iniciarSincronizacaoHorario();
+
       return serverTime;
     } catch (error) {
-      console.error("Erro ao obter horário do servidor:", error);
       setErro(
-        "Não foi possível sincronizar com o horário do servidor. Tente novamente."
+        "Não foi possível sincronizar com o horário do servidor. Tentando novamente..."
       );
-      // Não usamos fallback de horário local
-      return null;
-    } finally {
-      setCarregando(false);
+      return new Date();
     }
   };
 
-  // Adicione este novo useEffect após os existentes
-  // Modifique este useEffect (que atualmente faz requisições a cada 30 segundos)
-  useEffect(() => {
+  const iniciarSincronizacaoHorario = () => {
     let localTimer;
     let syncTimer;
-    let localTime = null;
+    let localTime = serverTime || new Date();
 
-    // Função para sincronizar com o servidor (similar ao updateServerTime existente)
     const syncWithServer = async () => {
       try {
-        // Adicionar parâmetro para evitar cache
         const timeResponse = await fetch(
           `https://faceponto-banco-dados-production.up.railway.app/horario-brasilia?t=${Date.now()}`
         );
@@ -157,21 +126,14 @@ function RegistroPonto() {
         }
 
         const timeData = await timeResponse.json();
-        console.log("Atualização de horário recebida:", timeData);
-
         let serverTime = null;
 
-        // Prioridade 1: Usar o formato antigo com horario
         if (timeData && timeData.horario) {
           serverTime = new Date(timeData.horario);
-          console.log("Horário sincronizado do servidor:", serverTime);
-        }
-        // Prioridade 2: Usar components se disponível
-        else if (
+        } else if (
           timeData &&
           timeData.components &&
-          typeof timeData.components.year === "number" &&
-          typeof timeData.components.month === "number"
+          typeof timeData.components.year === "number"
         ) {
           const components = timeData.components;
           serverTime = new Date(
@@ -182,77 +144,104 @@ function RegistroPonto() {
             components.minute,
             components.second
           );
-          console.log("Horário criado a partir de components:", serverTime);
-        }
-        // Prioridade 3: Usar isoString se disponível
-        else if (
-          timeData &&
-          timeData.isoString &&
-          typeof timeData.isoString === "string"
-        ) {
+        } else if (timeData && timeData.isoString) {
           serverTime = new Date(timeData.isoString);
-          console.log("Horário criado a partir de isoString:", serverTime);
-        }
-        // Prioridade 4: Usar timestamp se disponível
-        else if (
-          timeData &&
-          timeData.timestamp &&
-          typeof timeData.timestamp === "number"
-        ) {
+        } else if (timeData && timeData.timestamp) {
           serverTime = new Date(timeData.timestamp);
-          console.log("Horário criado a partir de timestamp:", serverTime);
-        } else {
-          throw new Error("Formato de resposta do servidor não reconhecido");
         }
 
-        // Atualizar o horário local com o do servidor
         localTime = serverTime;
         setServerTime(serverTime);
-      } catch (err) {
-        console.error("Erro ao atualizar horário do servidor:", err);
-        // Não mostra erro na interface para não sobrecarregar com mensagens
-      }
+      } catch (err) {}
     };
 
-    // Função para incrementar o horário localmente a cada segundo
     const updateLocalTime = () => {
       if (localTime) {
-        // Incrementa o horário local em 1 segundo
         localTime = new Date(localTime.getTime() + 1000);
         setServerTime(new Date(localTime));
       }
     };
 
-    // Sincronizar com o servidor inicialmente
-    syncWithServer();
-
-    // Configurar os dois timers:
-    // 1. Atualização local (a cada segundo)
     localTimer = setInterval(updateLocalTime, 1000);
-
-    // 2. Sincronização com o servidor (a cada 30 segundos)
     syncTimer = setInterval(syncWithServer, 30000);
 
-    // Limpeza dos timers na desmontagem do componente
     return () => {
       clearInterval(localTimer);
       clearInterval(syncTimer);
     };
-  }, []); // Sem dependências para executar apenas na montagem
+  };
+
+  const carregarModelosFaciais = async () => {
+    try {
+      try {
+        const testeFetch = await fetch(
+          "/models/tiny_face_detector_model-weights_manifest.json"
+        );
+      } catch (e) {}
+      await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+      await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+      setModelsLoaded(true);
+      return true;
+    } catch (error) {
+      setErro(
+        "Erro ao carregar modelos de detecção facial. Tente recarregar a página."
+      );
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (
+      modoQuiosque === "contagem" ||
+      modoQuiosque === "processando" ||
+      modoQuiosque === "feedback"
+    ) {
+      if (detectionRef.current) {
+        clearInterval(detectionRef.current);
+        detectionRef.current = null;
+      }
+    }
+
+    if (modoQuiosque === "detectando") {
+      iniciarDeteccaoFacial();
+      iniciarTimerStandby();
+    } else if (modoQuiosque === "contagem") {
+      iniciarContagem();
+    } else if (modoQuiosque === "processando") {
+      processarRegistro();
+    } else if (modoQuiosque === "feedback") {
+      iniciarTimerFeedback();
+    }
+  }, [modoQuiosque]);
+
+  const iniciarTimerStandby = () => {
+    if (standbyTimerRef.current) {
+      clearTimeout(standbyTimerRef.current);
+    }
+
+    standbyTimerRef.current = setTimeout(() => {
+      if (modoQuiosque === "detectando") {
+        setModoQuiosque("standby");
+      }
+    }, 20000);
+  };
+
+  useEffect(() => {
+    if (modoQuiosque === "contagem") {}
+    return () => {};
+  }, [contadorTempo, modoQuiosque]);
 
   const iniciarCamera = async () => {
     try {
       setErro("");
-      setCarregando(true);
-
-      // Se não houver registro hoje, continua para ativar a câmera
-      setPermissaoCamera("nao-solicitada");
+      pararCamera();
       const constraints = {
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 640 },
+          height: { ideal: 480 },
           facingMode: "user",
         },
+        audio: false,
       };
 
       const streamCamera = await navigator.mediaDevices.getUserMedia(
@@ -262,19 +251,42 @@ function RegistroPonto() {
       setPermissaoCamera("concedida");
 
       if (videoRef.current) {
+        videoRef.current.srcObject = null;
         videoRef.current.srcObject = streamCamera;
-        await videoRef.current.play().catch((err) => {
-          console.error("Erro ao iniciar reprodução de vídeo:", err);
+        return new Promise((resolve) => {
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current
+              .play()
+              .then(() => {
+                if (videoRef.current.paused) {
+                  videoRef.current
+                    .play()
+                    .catch((e) => {});
+                }
+                setTimeout(resolve, 1000);
+              })
+              .catch((err) => {
+                resolve();
+              });
+          };
+          setTimeout(() => {
+            if (videoRef.current && !videoRef.current.onloadedmetadata) {
+              videoRef.current
+                .play()
+                .catch((e) => {});
+              resolve();
+            }
+          }, 2000);
         });
       }
-      setCarregando(false);
+
+      return true;
     } catch (error) {
-      console.error("Erro ao acessar câmera:", error);
       setPermissaoCamera("negada");
       setErro(
-        "Não foi possível acessar sua câmera. Por favor, verifique as permissões do navegador e tente novamente."
+        "Não foi possível acessar a câmera. Verifique as permissões do navegador."
       );
-      setCarregando(false);
+      return false;
     }
   };
 
@@ -285,125 +297,171 @@ function RegistroPonto() {
     }
   };
 
-  const iniciarContagem = () => {
-    setContadorTempo(3);
-    setTimerAtivo(true);
-  };
-
-  const tirarFoto = () => {
-    console.log("Tentando capturar foto...");
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) {
-      console.error("Referências de vídeo ou canvas não encontradas");
-      setErro("Erro ao capturar imagem: referências não encontradas");
+  const iniciarDeteccaoFacial = () => {
+    if (!videoRef.current || !modelsLoaded || !stream) {
       return;
     }
-    try {
-      if (video.videoWidth && video.videoHeight) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext("2d");
-        if (!context) {
-          console.error("Erro ao obter contexto 2d do canvas");
-          setErro("Erro ao processar imagem");
-          return;
-        }
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        try {
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                console.log("Foto capturada com sucesso:", blob.size, "bytes");
-                setFoto(blob);
-                pararCamera();
-              } else {
-                console.error("Blob gerado é nulo");
-                setErro("Erro ao processar a imagem capturada");
-              }
-            },
-            "image/jpeg",
-            0.9
+
+    if (
+      modoQuiosque === "feedback" ||
+      modoQuiosque === "contagem" ||
+      modoQuiosque === "processando"
+    ) {
+      return;
+    }
+
+    if (detectionRef.current) {
+      clearInterval(detectionRef.current);
+    }
+
+    detectionRef.current = setInterval(async () => {
+      if (modoQuiosque !== "detectando" && modoQuiosque !== "standby") {
+        return;
+      }
+
+      try {
+        if (videoRef.current && videoRef.current.readyState === 4) {
+          const detectorOptions = new faceapi.TinyFaceDetectorOptions({
+            inputSize: 160,
+            scoreThreshold: 0.1,
+          });
+
+          const detections = await faceapi.detectAllFaces(
+            videoRef.current,
+            detectorOptions
           );
-        } catch (blobError) {
-          console.error("Erro ao gerar blob:", blobError);
-          try {
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-            console.log("DataURL gerado:", dataUrl.substring(0, 50) + "...");
-            const byteString = atob(dataUrl.split(",")[1]);
-            const mimeString = dataUrl
-              .split(",")[0]
-              .split(":")[1]
-              .split(";")[0];
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let i = 0; i < byteString.length; i++) {
-              ia[i] = byteString.charCodeAt(i);
+
+          if (detections.length > 0) {
+            if (modoQuiosque === "standby") {
+              setModoQuiosque("detectando");
             }
-            const manualBlob = new Blob([ab], { type: mimeString });
-            setFoto(manualBlob);
-            pararCamera();
-          } catch (dataUrlError) {
-            console.error("Também falhou ao usar dataURL:", dataUrlError);
-            setErro("Não foi possível processar a imagem");
+
+            if (verificarPosicaoRosto(detections[0])) {
+              clearInterval(detectionRef.current);
+              detectionRef.current = null;
+              setModoQuiosque("contagem");
+            }
+
+            setFaceDetectada(true);
+            iniciarTimerStandby();
+          } else {
+            setFaceDetectada(false);
           }
         }
-      } else {
-        console.error(
-          "Dimensões do vídeo não disponíveis:",
-          video.videoWidth,
-          video.videoHeight
-        );
-        setErro("Erro ao capturar imagem: vídeo não está pronto");
+      } catch (error) {}
+    }, 500);
+
+    if (videoRef.current) {
+      if (videoRef.current.paused && videoRef.current.srcObject) {
+        videoRef.current.play().catch((err) => {});
       }
-    } catch (error) {
-      console.error("Erro geral ao tirar foto:", error);
-      setErro(
-        "Ocorreu um erro ao capturar a foto. Por favor, tente novamente."
-      );
     }
+  };
+
+  const verificarPosicaoRosto = (face) => {
+    if (!face || !videoRef.current) return false;
+    if (face.score > 0.3) {
+      return true;
+    }
+    return false;
+  };
+
+  const iniciarContagem = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setContadorTempo(3);
+    setTimeout(() => {
+      setContadorTempo(2);
+      setTimeout(() => {
+        setContadorTempo(1);
+        setTimeout(() => {
+          setContadorTempo(0);
+          setTimeout(() => {
+            tirarFoto();
+          }, 200);
+        }, 1000);
+      }, 1000);
+    }, 1000);
   };
 
   useEffect(() => {
-    if (timerAtivo) {
-      if (contadorTempo > 0) {
-        timerRef.current = setTimeout(() => {
-          setContadorTempo(contadorTempo - 1);
-        }, 1000);
-      } else {
-        console.log("Contagem chegou a zero, chamando tirarFoto()");
-        setTimerAtivo(false);
-        tirarFoto();
-      }
-    }
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [timerAtivo, contadorTempo]);
+  }, [contadorTempo]);
 
-  const registrarPonto = async () => {
+  const tirarFoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas) {
+      setErro("Erro ao capturar imagem: referências não encontradas");
+      resetarParaDeteccao();
+      return;
+    }
+
     try {
-      console.log("Iniciando registro de ponto...");
-      setCarregando(true);
+      if (video.videoWidth && video.videoHeight) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          setErro("Erro ao processar imagem");
+          resetarParaDeteccao();
+          return;
+        }
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageUrl = canvas.toDataURL("image/jpeg", 0.9);
+        setFotoUrl(imageUrl);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              setFoto(blob);
+              setModoQuiosque("processando");
+            } else {
+              setErro("Erro ao processar a imagem");
+              resetarParaDeteccao();
+            }
+          },
+          "image/jpeg",
+          0.9
+        );
+      } else {
+        setErro("Erro ao capturar imagem: vídeo não está pronto");
+        resetarParaDeteccao();
+      }
+    } catch (error) {
+      setErro("Ocorreu um erro ao capturar a foto");
+      resetarParaDeteccao();
+    }
+  };
+
+  const processarRegistro = async () => {
+    try {
       setErro("");
 
       const token = localStorage.getItem("token");
-      console.log("Token atual:", token ? "Token presente" : "Token ausente");
 
       if (!token || token === "undefined" || token === "null") {
-        window.location.href = "/";
-        throw new Error("Sessão expirada. Por favor, faça login novamente.");
-      }
-
-      if (!foto) {
-        setErro("Por favor, tire uma foto primeiro.");
-        setCarregando(false);
+        setErro("Sessão expirada. Por favor, faça login novamente.");
+        setTimeout(resetarParaDeteccao, 5000);
         return;
       }
 
-      // Buscar dados do usuário
+      if (!foto) {
+        setErro("Erro: Foto não capturada.");
+        setTimeout(resetarParaDeteccao, 5000);
+        return;
+      }
+
       const registroResponse = await fetch(
         "https://faceponto-banco-dados-production.up.railway.app/usuarios/me",
         {
@@ -413,51 +471,35 @@ function RegistroPonto() {
             "Content-Type": "application/json",
           },
         }
-      ).catch((networkError) => {
-        console.error("Erro de rede:", networkError);
-        throw new Error(
-          "Erro de conexão com o servidor. Verifique sua internet."
-        );
-      });
-
-      console.log("Status da resposta:", registroResponse.status);
+      );
 
       if (!registroResponse.ok) {
-        const errorData = await registroResponse.json().catch(() => ({}));
-        if (registroResponse.status === 401) {
-          localStorage.removeItem("token");
-          setTimeout(() => (window.location.href = "/"), 3000);
-          throw new Error("Sessão expirada. Redirecionando para login...");
+        const errorStatus = registroResponse.status;
+        if (errorStatus === 401) {
+          setErro("Sessão expirada. Por favor, faça login novamente.");
+          setTimeout(resetarParaDeteccao, 5000);
+          return;
         }
-        throw new Error(
-          errorData?.message ||
-            `Erro no servidor (${registroResponse.status}). Tente novamente.`
-        );
+        throw new Error(`Erro ao obter dados do usuário (${errorStatus})`);
       }
 
-      let jsonRegistroResponse;
-      try {
-        jsonRegistroResponse = await registroResponse.json();
-        if (!jsonRegistroResponse) {
-          throw new Error("Resposta vazia do servidor");
-        }
-      } catch (jsonError) {
-        console.error("Erro ao processar JSON:", jsonError);
-        throw new Error(
-          "Erro ao processar resposta do servidor. Formato inválido."
-        );
+      const jsonRegistroResponse = await registroResponse.json();
+
+      if (!jsonRegistroResponse) {
+        throw new Error("Resposta vazia do servidor");
       }
 
       const fotoCampo = jsonRegistroResponse.foto;
+      const nomeToken = jsonRegistroResponse.nome;
+
       if (!fotoCampo) {
         throw new Error(
           "Não há foto cadastrada para este usuário. Contate o administrador."
         );
       }
 
-      const nomeToken = jsonRegistroResponse.nome;
       if (!nomeToken) {
-        throw new Error("Dados de usuário incompletos. Nome não encontrado.");
+        throw new Error("Dados de usuário incompletos.");
       }
 
       let codificacaoArray;
@@ -468,7 +510,6 @@ function RegistroPonto() {
             throw new Error("A codificação deve ser um array");
           }
         } catch (e) {
-          console.error("Formato de codificação inválido:", e);
           throw new Error(
             "Formato de codificação facial inválido no banco de dados."
           );
@@ -476,7 +517,6 @@ function RegistroPonto() {
       } else if (Array.isArray(fotoCampo)) {
         codificacaoArray = fotoCampo;
       } else {
-        console.error("Tipo de codificação não suportado:", typeof fotoCampo);
         throw new Error("Formato de codificação não suportado");
       }
 
@@ -487,287 +527,231 @@ function RegistroPonto() {
         formData.append("codificacao", valor);
       });
 
-      console.log(
-        "Array de codificação:",
-        Array.isArray(codificacaoArray),
-        codificacaoArray.length + " itens"
+      const verificacaoResponse = await axios.post(
+        "https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
-      try {
-        const verificacaoResponse = await axios.post(
-          "https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer/",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+      if (
+        !verificacaoResponse.data.match &&
+        !verificacaoResponse.data.success
+      ) {
+        throw new Error(
+          "Não foi possível confirmar sua identidade. Tente novamente."
         );
-
-        console.log("Resposta da verificação:", verificacaoResponse.data);
-
-        if (
-          !verificacaoResponse.data.match &&
-          !verificacaoResponse.data.success
-        ) {
-          throw new Error(
-            "Não foi possível confirmar sua identidade. Por favor, tente novamente."
-          );
-        }
-
-        // Formatar a data conforme o servidor espera
-        const resposta = await fetch(
-          "https://faceponto-banco-dados-production.up.railway.app/usuarios/me/frequencia",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              nome: nomeToken,
-            }),
-          }
-        );
-
-        if (!resposta.ok) {
-          const errorText = await resposta.text();
-          console.error("Texto da resposta de erro:", errorText);
-
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-          } catch (e) {
-            errorData = { erro: errorText || "Erro desconhecido" };
-          }
-
-          throw new Error(
-            errorData?.erro ||
-              errorData?.message ||
-              `Erro ao registrar frequência (${resposta.status}). Tente novamente.`
-          );
-        }
-
-        const resultado = await resposta.json();
-        console.log("Frequência registrada com sucesso:", resultado);
-        setSucesso(true);
-      } catch (axiosError) {
-        console.error("Erro detalhado do Axios:", axiosError.response?.data);
-
-        if (axiosError.response?.status === 422) {
-          throw new Error(
-            "Erro no formato dos dados enviados. Detalhes: " +
-              JSON.stringify(
-                axiosError.response.data?.detail || axiosError.response.data
-              )
-          );
-        }
-
-        throw axiosError;
-      } finally {
-        setCarregando(false);
       }
-    } catch (error) {
-      console.error("Erro geral:", error);
-      setErro(
-        error.message ||
-          "Erro ao tentar registrar ponto. Por favor, tente novamente."
+
+      const resposta = await fetch(
+        "https://faceponto-banco-dados-production.up.railway.app/usuarios/me/frequencia",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            nome: nomeToken,
+          }),
+        }
       );
-      setCarregando(false);
+
+      if (!resposta.ok) {
+        const errorText = await resposta.text();
+
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { erro: errorText || "Erro desconhecido" };
+        }
+
+        throw new Error(
+          errorData?.erro ||
+            errorData?.message ||
+            `Erro ao registrar ponto (${resposta.status})`
+        );
+      }
+
+      const resultado = await resposta.json();
+      setSucesso(true);
+      setUsuarioReconhecido(nomeToken);
+      setModoQuiosque("feedback");
+    } catch (error) {
+      setErro(error.message || "Erro ao registrar ponto. Tente novamente.");
+      setSucesso(false);
+      setModoQuiosque("feedback");
+    } finally {}
+  };
+
+  const iniciarTimerFeedback = () => {
+    if (detectionRef.current) {
+      clearInterval(detectionRef.current);
+      detectionRef.current = null;
+    }
+
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+    }
+
+    feedbackTimerRef.current = setTimeout(() => {
+      resetarParaDeteccao();
+    }, 5000);
+  };
+
+  const resetarParaDeteccao = () => {
+    setSucesso(false);
+    setErro("");
+    setUsuarioReconhecido("");
+    setFoto(null);
+    setFotoUrl(null);
+    setFaceDetectada(false);
+    setModoQuiosque("detectando");
+    if (
+      videoRef.current &&
+      videoRef.current.paused &&
+      videoRef.current.srcObject
+    ) {
+      videoRef.current.play().catch((err) => {
+        setTimeout(() => {
+          pararCamera();
+          iniciarCamera();
+        }, 500);
+      });
+    } else if (!videoRef.current || !videoRef.current.srcObject) {
+      setTimeout(() => {
+        iniciarCamera();
+      }, 500);
     }
   };
 
-  const voltarParaHome = () => {
-    window.location.href = "/home";
+  const limparTodosTimers = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    if (standbyTimerRef.current) clearTimeout(standbyTimerRef.current);
+    if (detectionRef.current) clearInterval(detectionRef.current);
+  };
+
+  const forcarDeteccao = () => {
+    setFaceDetectada(true);
+    if (detectionRef.current) clearInterval(detectionRef.current);
+    setModoQuiosque("contagem");
   };
 
   return (
     <>
-      {carregando && (
-        <LoadingSpinner
-          message={
-            verificacaoCompleta
-              ? "Processando seu registro..."
-              : "Preparando câmera..."
-          }
-        />
+      {carregando && modoQuiosque !== "processando" && (
+        <LoadingSpinner message="Preparando câmera..." />
       )}
 
       <div className="container-registro">
         <div className={`registro-content${carregando ? " invisible" : ""}`}>
           <div className="registro-header">
-            <h1>Registro de Ponto</h1>
-            <button
-              className="dicas-button"
-              onClick={() => setMostrarDicas(!mostrarDicas)}
-              aria-label="Mostrar dicas para foto"
-            >
-              <FaRegLightbulb />
-              {mostrarDicas ? "Ocultar dicas" : "Dicas para foto"}
-            </button>
+            <h1>Registro de Ponto Automático</h1>
+            {modoQuiosque === "standby" && (
+              <div className="standby-indicator">
+                <FaDesktop /> Modo de espera - Aproxime-se para registrar ponto
+              </div>
+            )}
           </div>
 
-          {mostrarDicas && (
-            <div className="dicas-container">
-              <h3>
-                <FaInfoCircle /> Como tirar uma boa foto para reconhecimento
-              </h3>
-              <ul>
-                <li>Posicione seu rosto no centro da câmera</li>
-                <li>Certifique-se de que seu rosto esteja bem iluminado</li>
-                <li>Evite usar chapéus, óculos escuros ou máscaras</li>
-                <li>Mantenha uma expressão neutra</li>
-                <li>Olhe diretamente para a câmera</li>
-              </ul>
-            </div>
-          )}
-
-          {erro && (
+          {erro && modoQuiosque !== "feedback" && (
             <div className="erro-message">
               <p>{erro}</p>
             </div>
           )}
 
-          {sucesso && (
-            <div className="registro-sucesso">
-              <div className="sucesso-message">
-                <FaCheck className="sucesso-icon" />
-                <p>Ponto registrado com sucesso!</p>
+          {modoQuiosque === "feedback" ? (
+            <div
+              className={`registro-feedback ${
+                sucesso ? "registro-sucesso" : "registro-erro"
+              }`}
+            >
+              {sucesso ? (
+                <div className="sucesso-message">
+                  <FaCheck className="sucesso-icon" />
+                  <p>Ponto registrado com sucesso!</p>
+                </div>
+              ) : (
+                <div className="erro-message">
+                  <p>{erro || "Erro ao processar reconhecimento facial"}</p>
+                </div>
+              )}
+
+              {fotoUrl && (
+                <div className="foto-capturada">
+                  <img
+                    src={fotoUrl}
+                    alt="Foto capturada"
+                    className="foto-preview-image"
+                  />
+                </div>
+              )}
+
+              <div className="usuario-reconhecido">
+                <h2>{sucesso ? usuarioReconhecido : "Não reconhecido"}</h2>
+                <p>
+                  {serverTime ? serverTime.toLocaleTimeString() : "--:--:--"}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`camera-container ${
+                modoQuiosque === "standby" ? "standby-mode" : ""
+              }`}
+            >
+              <div className="camera-frame">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`camera-preview ${
+                    modoQuiosque === "standby" ? "dim-video" : ""
+                  }`}
+                />
+
+                {modoQuiosque === "contagem" && (
+                  <div className="timer-overlay">
+                    <span className="timer-count">{contadorTempo}</span>
+                  </div>
+                )}
+
+                <div className="face-overlay">
+                  <div
+                    className={`face-guide ${
+                      faceDetectada ? "face-detected" : ""
+                    }`}
+                  ></div>
+                </div>
               </div>
 
-              <div className="voltar-login">
+              <div className="status-info">
                 <p>
-                  Seu registro foi realizado com sucesso. O que deseja fazer
-                  agora?
+                  {serverTime
+                    ? serverTime.toLocaleString("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                      })
+                    : "Sincronizando horário..."}
                 </p>
-                <button className="login-button" onClick={voltarParaHome}>
-                  Voltar para a Home
-                </button>
+                <p className="status-text">
+                  {modoQuiosque === "detectando" &&
+                    "Posicione seu rosto no centro para registrar ponto"}
+                  {modoQuiosque === "standby" &&
+                    "Aproxime-se para ativar o sistema"}
+                  {modoQuiosque === "contagem" && "Prepare-se para a foto"}
+                  {modoQuiosque === "processando" && "Processando, aguarde..."}
+                </p>
               </div>
             </div>
           )}
-
-          <div className="camera-container">
-            {!foto && !stream && permissaoCamera !== "negada" && (
-              <div className="camera-start">
-                <button className="camera-button" onClick={iniciarCamera}>
-                  <FaCamera />
-                  Iniciar Câmera
-                </button>
-                <p className="camera-info">
-                  Clique para ativar sua câmera e registrar seu ponto
-                </p>
-              </div>
-            )}
-
-            {permissaoCamera === "negada" && (
-              <div className="permissao-negada">
-                <FaInfoCircle size={40} />
-                <h3>Permissão para câmera negada</h3>
-                <p>
-                  Para registrar seu ponto, você precisa permitir o acesso à
-                  câmera nas configurações do seu navegador.
-                </p>
-                <button className="camera-button" onClick={iniciarCamera}>
-                  Tentar novamente
-                </button>
-              </div>
-            )}
-
-            {stream && (
-              <div className="camera-live">
-                <div className="camera-frame">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="camera-preview"
-                  />
-                  {timerAtivo && (
-                    <div className="timer-overlay">
-                      <span className="timer-count">{contadorTempo}</span>
-                    </div>
-                  )}
-                  <div className="face-overlay">
-                    <div className="face-guide"></div>
-                  </div>
-                </div>
-                <div className="camera-controls">
-                  <button
-                    className="control-button cancel"
-                    onClick={pararCamera}
-                    aria-label="Cancelar"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    className="capture-button"
-                    onClick={iniciarContagem}
-                    disabled={timerAtivo}
-                    aria-label="Tirar foto"
-                  >
-                    <FaCamera />
-                  </button>
-                  <button
-                    className="control-button switch-camera"
-                    onClick={() => {
-                      pararCamera();
-                      setTimeout(iniciarCamera, 300);
-                    }}
-                    aria-label="Trocar câmera"
-                  >
-                    Reiniciar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {foto && !sucesso && (
-              <div className="foto-preview">
-                <h3>Revisar Foto</h3>
-                <img
-                  src={URL.createObjectURL(foto)}
-                  alt="Foto capturada"
-                  className="foto-canvas"
-                />
-                <div className="foto-actions">
-                  <button
-                    className="action-button retry"
-                    onClick={() => {
-                      setFoto(null);
-                      iniciarCamera();
-                    }}
-                  >
-                    <FaRedo />
-                    Nova Foto
-                  </button>
-                  <button
-                    className="action-button confirm"
-                    onClick={registrarPonto}
-                  >
-                    <FaCheck />
-                    Confirmar e Registrar
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="status-info">
-            <p>
-              {serverTime
-                ? serverTime.toLocaleString("pt-BR", {
-                    timeZone: "America/Sao_Paulo",
-                  })
-                : "Sincronizando horário com o servidor..."}
-            </p>
-          </div>
         </div>
-
-        <canvas
-          ref={canvasRef}
-          style={{ display: "none", position: "absolute" }}
-        />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
       </div>
     </>
   );
