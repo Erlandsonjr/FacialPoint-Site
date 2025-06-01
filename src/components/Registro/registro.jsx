@@ -444,91 +444,206 @@ function RegistroPonto() {
     }
   };
 
+  const getKioskToken = async () => {
+    try {
+      // Verificar se já temos um token de quiosque no localStorage
+      let kioskToken = localStorage.getItem('kioskToken');
+      
+      // Se não tiver token ou estiver perto de expirar, obter novo
+      if (!kioskToken) {
+        const response = await fetch(
+          "https://faceponto-banco-dados-production.up.railway.app/auth/kiosk",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              kioskSecret: "chave_secreta_do_quiosque_definida_no_ambiente" // Idealmente, isso viria do .env local
+            }),
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          kioskToken = data.token;
+          localStorage.setItem('kioskToken', kioskToken);
+        } else {
+          throw new Error("Falha na autenticação do quiosque");
+        }
+      }
+      
+      return kioskToken;
+    } catch (error) {
+      console.error("Erro ao obter token do quiosque:", error);
+      setErro("Erro de autenticação do quiosque. Contate o administrador.");
+      return null;
+    }
+  };
+
   const processarRegistro = async () => {
     try {
       setErro("");
+      setCarregando(true);
 
-      const token = localStorage.getItem("token");
-
-      if (!token || token === "undefined" || token === "null") {
-        setErro("Sessão expirada. Por favor, faça login novamente.");
-        setTimeout(resetarParaDeteccao, 5000);
-        return;
-      }
-
+      // Validar foto
       if (!foto) {
         setErro("Erro: Foto não capturada.");
         setTimeout(resetarParaDeteccao, 5000);
         return;
       }
 
-      const registroResponse = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/usuarios/me",
+      console.log("Iniciando processo de reconhecimento facial");
+
+      // 1. Obter lista de usuários cadastrados com suas codificações faciais
+      // Usar endpoint público temporariamente para desbloquer o desenvolvimento
+      console.log("Obtendo lista de usuários...");
+      const usuariosResponse = await fetch(
+        "https://faceponto-banco-dados-production.up.railway.app/public/usuarios/codificacoes",
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
       );
 
-      if (!registroResponse.ok) {
-        const errorStatus = registroResponse.status;
-        if (errorStatus === 401) {
-          setErro("Sessão expirada. Por favor, faça login novamente.");
-          setTimeout(resetarParaDeteccao, 5000);
-          return;
-        }
-        throw new Error(`Erro ao obter dados do usuário (${errorStatus})`);
+      if (!usuariosResponse.ok) {
+        throw new Error(`Erro ao obter lista de usuários (${usuariosResponse.status})`);
       }
 
-      const jsonRegistroResponse = await registroResponse.json();
+      const usuariosData = await usuariosResponse.json();
+      console.log(`${usuariosData.length} usuários encontrados.`);
 
-      if (!jsonRegistroResponse) {
-        throw new Error("Resposta vazia do servidor");
+      if (!usuariosData || usuariosData.length === 0) {
+        throw new Error("Nenhum usuário cadastrado no sistema.");
       }
 
-      const fotoCampo = jsonRegistroResponse.foto;
-      const nomeToken = jsonRegistroResponse.nome;
-
-      if (!fotoCampo) {
-        throw new Error(
-          "Não há foto cadastrada para este usuário. Contate o administrador."
-        );
-      }
-
-      if (!nomeToken) {
-        throw new Error("Dados de usuário incompletos.");
-      }
-
-      let codificacaoArray;
-      if (typeof fotoCampo === "string") {
-        try {
-          codificacaoArray = JSON.parse(fotoCampo);
-          if (!Array.isArray(codificacaoArray)) {
-            throw new Error("A codificação deve ser um array");
+      // 2. Preparar todas as codificações para reconhecimento
+      const todasCodificacoes = [];
+      const usuariosMap = {};
+      
+      usuariosData.forEach(usuario => {
+        if (usuario.foto) {
+          try {
+            let codificacao;
+            
+            if (typeof usuario.foto === "string") {
+              codificacao = JSON.parse(usuario.foto);
+            } else if (Array.isArray(usuario.foto)) {
+              codificacao = usuario.foto;
+            }
+            
+            if (Array.isArray(codificacao)) {
+              // Adicionar a codificação à lista de todas as codificacoes
+              todasCodificacoes.push({
+                codificacao: codificacao,
+                userId: usuario.id
+              });
+              
+              // Manter mapeamento de ID para dados completos do usuário
+              usuariosMap[usuario.id] = usuario;
+            }
+          } catch (error) {
+            console.warn(`Codificação inválida para usuário ${usuario.id}: ${error.message}`);
           }
-        } catch (e) {
-          throw new Error(
-            "Formato de codificação facial inválido no banco de dados."
-          );
         }
-      } else if (Array.isArray(fotoCampo)) {
-        codificacaoArray = fotoCampo;
-      } else {
-        throw new Error("Formato de codificação não suportado");
-      }
-
-      const formData = new FormData();
-      formData.append("file", foto);
-
-      codificacaoArray.forEach((valor) => {
-        formData.append("codificacao", valor);
       });
 
+      if (todasCodificacoes.length === 0) {
+        throw new Error("Nenhum usuário tem codificação facial cadastrada.");
+      }
+
+      console.log(`${todasCodificacoes.length} codificações faciais válidas encontradas.`);
+
+      // 3. Enviar foto para reconhecimento contra todas as codificações
+      console.log("Enviando para reconhecimento facial...");
+      const formData = new FormData();
+      
+      // Otimizar o tamanho da imagem antes do envio
+      const otimizarImagem = async (blob) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            // Aumentar para 600x450px para melhor qualidade
+            const maxWidth = 600;
+            const maxHeight = 450;
+            
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+            
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+            
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Aumentar a qualidade para 0.85 (era 0.7)
+            canvas.toBlob(resolve, "image/jpeg", 0.85);
+          };
+          
+          img.src = URL.createObjectURL(blob);
+        });
+      };
+
+      // Antes de enviar o arquivo
+      const fotoOtimizada = await otimizarImagem(foto);
+      formData.append("file", fotoOtimizada);
+      
+      // Enviar todas as codificações com identificação do usuário correspondente
+      todasCodificacoes.forEach((item) => {
+        // Verificar se a codificação é uma string JSON
+        let encodingArray = item.codificacao;
+        
+        // Se for uma string JSON, parsear para array
+        if (typeof encodingArray === 'string') {
+          try {
+            encodingArray = JSON.parse(encodingArray);
+          } catch (err) {
+            console.warn(`Erro ao parsear codificação: ${err.message}`);
+          }
+        }
+        
+        // Verificar se agora temos um array
+        if (Array.isArray(encodingArray)) {
+          // Enviar cada elemento do array individualmente como elemento da codificação
+          encodingArray.forEach((valor, idx) => {
+            formData.append(`codificacao_${item.userId}_${idx}`, valor);
+          });
+          console.log(`Enviado ${encodingArray.length} elementos para usuário ${item.userId}`);
+        } else {
+          console.warn(`Codificação inválida para usuário ${item.userId}`);
+        }
+      });
+
+      // Adicionar inspeção de dados antes do post axios
+      console.log("Enviando codificações para reconhecimento:");
+      todasCodificacoes.forEach(item => {
+        console.log(`Usuário ${item.userId}: ${typeof item.codificacao}`, 
+          Array.isArray(item.codificacao) ? 
+            `Array com ${item.codificacao.length} elementos` : 
+            item.codificacao
+        );
+      });
+
+      // Ver o que está sendo enviado no FormData
+      const formEntries = [...formData.entries()];
+      console.log("Entradas do FormData:", formEntries.slice(0, 10));
+
+      // Enviar para API de reconhecimento
       const verificacaoResponse = await axios.post(
-        "https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer/",
+        "https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer-multiplos/",
         formData,
         {
           headers: {
@@ -537,55 +652,94 @@ function RegistroPonto() {
         }
       );
 
-      if (
-        !verificacaoResponse.data.match &&
-        !verificacaoResponse.data.success
-      ) {
-        throw new Error(
-          "Não foi possível confirmar sua identidade. Tente novamente."
-        );
+      console.log("Resposta do reconhecimento facial:", verificacaoResponse.data);
+
+      if (!verificacaoResponse.data.match || !verificacaoResponse.data.usuarioId) {
+        throw new Error("Rosto não reconhecido. Verifique se você está cadastrado no sistema.");
       }
 
+      const usuarioReconhecidoId = verificacaoResponse.data.usuarioId;
+      const usuarioReconhecido = usuariosMap[usuarioReconhecidoId];
+      
+      if (!usuarioReconhecido) {
+        throw new Error("Usuário correspondente não encontrado no sistema.");
+      }
+
+      // 4. Verificar se o usuário já registrou ponto hoje
+      const hoje = new Date().toISOString().split('T')[0];
+      const verificaRegistroResponse = await fetch(
+        `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (verificaRegistroResponse.ok) {
+        const registroExistente = await verificaRegistroResponse.json();
+        
+        if (registroExistente && registroExistente.jaRegistrou) {
+          setUsuarioReconhecido(usuarioReconhecido.nome);
+          setErro(`${usuarioReconhecido.nome} já registrou seu ponto hoje.`);
+          setSucesso(false);
+          setModoQuiosque("feedback");
+          return;
+        }
+      }
+
+      // 5. Registrar ponto para o usuário reconhecido
+      console.log("Registrando ponto para:", usuarioReconhecido.nome);
+      const dataAtual = serverTime ? new Date(serverTime) : new Date();
+      const dataFormatada = dataAtual.toISOString();
+
+      const dadosRegistro = {
+        nome: usuarioReconhecido.nome,
+        usuario_id: usuarioReconhecidoId,
+        data: dataFormatada,
+        tipo_registro: "entrada", 
+      };
+
+      console.log("Enviando dados para registro:", dadosRegistro);
+
       const resposta = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/usuarios/me/frequencia",
+        "https://faceponto-banco-dados-production.up.railway.app/frequencias/registrar",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            nome: nomeToken,
-          }),
+          body: JSON.stringify(dadosRegistro),
         }
       );
 
       if (!resposta.ok) {
-        const errorText = await resposta.text();
-
-        let errorData;
+        let errorMsg = `Erro ao registrar ponto (${resposta.status})`;
         try {
-          errorData = JSON.parse(errorText);
+          const errorText = await resposta.text();
+          const errorData = JSON.parse(errorText);
+          errorMsg = errorData?.erro || errorData?.message || errorMsg;
         } catch (e) {
-          errorData = { erro: errorText || "Erro desconhecido" };
+          // Continuar com a mensagem padrão
         }
-
-        throw new Error(
-          errorData?.erro ||
-            errorData?.message ||
-            `Erro ao registrar ponto (${resposta.status})`
-        );
+        throw new Error(errorMsg);
       }
 
       const resultado = await resposta.json();
+      console.log("Registro concluído com sucesso:", resultado);
+      
       setSucesso(true);
-      setUsuarioReconhecido(nomeToken);
+      setUsuarioReconhecido(usuarioReconhecido.nome);
       setModoQuiosque("feedback");
     } catch (error) {
+      console.error("Erro no processo de registro:", error);
       setErro(error.message || "Erro ao registrar ponto. Tente novamente.");
       setSucesso(false);
       setModoQuiosque("feedback");
-    } finally {}
+    } finally {
+      setCarregando(false);
+    }
   };
 
   const iniciarTimerFeedback = () => {
@@ -642,116 +796,135 @@ function RegistroPonto() {
     setModoQuiosque("contagem");
   };
 
+  // Modifique o return do componente RegistroPonto para adicionar uma classe adaptável
   return (
     <>
       {carregando && modoQuiosque !== "processando" && (
         <LoadingSpinner message="Preparando câmera..." />
       )}
 
-      <div className="container-registro">
-        <div className={`registro-content${carregando ? " invisible" : ""}`}>
-          <div className="registro-header">
-            <h1>Registro de Ponto Automático</h1>
-            {modoQuiosque === "standby" && (
-              <div className="standby-indicator">
-                <FaDesktop /> Modo de espera - Aproxime-se para registrar ponto
-              </div>
-            )}
-          </div>
-
-          {erro && modoQuiosque !== "feedback" && (
-            <div className="erro-message">
-              <p>{erro}</p>
-            </div>
-          )}
-
-          {modoQuiosque === "feedback" ? (
-            <div
-              className={`registro-feedback ${
-                sucesso ? "registro-sucesso" : "registro-erro"
-              }`}
-            >
-              {sucesso ? (
-                <div className="sucesso-message">
-                  <FaCheck className="sucesso-icon" />
-                  <p>Ponto registrado com sucesso!</p>
-                </div>
-              ) : (
-                <div className="erro-message">
-                  <p>{erro || "Erro ao processar reconhecimento facial"}</p>
-                </div>
-              )}
-
-              {fotoUrl && (
-                <div className="foto-capturada">
-                  <img
-                    src={fotoUrl}
-                    alt="Foto capturada"
-                    className="foto-preview-image"
-                  />
-                </div>
-              )}
-
-              <div className="usuario-reconhecido">
-                <h2>{sucesso ? usuarioReconhecido : "Não reconhecido"}</h2>
-                <p>
-                  {serverTime ? serverTime.toLocaleTimeString() : "--:--:--"}
-                </p>
-              </div>
-            </div>
+      <div className="fullscreen-container">
+        {/* Câmera em tela cheia */}
+        <div className={`camera-fullscreen ${modoQuiosque === "standby" ? "dim-video" : ""}`}>
+          {modoQuiosque !== "feedback" ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="camera-fullscreen-video"
+            />
           ) : (
-            <div
-              className={`camera-container ${
-                modoQuiosque === "standby" ? "standby-mode" : ""
-              }`}
-            >
-              <div className="camera-frame">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`camera-preview ${
-                    modoQuiosque === "standby" ? "dim-video" : ""
-                  }`}
-                />
+            <img
+              src={fotoUrl}
+              alt="Foto capturada"
+              className="foto-fullscreen"
+            />
+          )}
+        </div>
 
-                {modoQuiosque === "contagem" && (
-                  <div className="timer-overlay">
-                    <span className="timer-count">{contadorTempo}</span>
-                  </div>
-                )}
-
-                <div className="face-overlay">
-                  <div
-                    className={`face-guide ${
-                      faceDetectada ? "face-detected" : ""
-                    }`}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="status-info">
-                <p>
-                  {serverTime
-                    ? serverTime.toLocaleString("pt-BR", {
-                        timeZone: "America/Sao_Paulo",
-                      })
-                    : "Sincronizando horário..."}
-                </p>
-                <p className="status-text">
-                  {modoQuiosque === "detectando" &&
-                    "Posicione seu rosto no centro para registrar ponto"}
-                  {modoQuiosque === "standby" &&
-                    "Aproxime-se para ativar o sistema"}
-                  {modoQuiosque === "contagem" && "Prepare-se para a foto"}
-                  {modoQuiosque === "processando" && "Processando, aguarde..."}
-                </p>
-              </div>
+        {/* Sobreposições - sempre visíveis */}
+        <div className="header-overlay">
+          <h1>Registro de Ponto Automático</h1>
+          {modoQuiosque === "standby" && (
+            <div className="standby-indicator">
+              <FaDesktop /> Aproxime-se para registrar ponto
             </div>
           )}
         </div>
+
+        {/* Horário sobreposto */}
+        <div className="time-overlay">
+          {serverTime
+            ? serverTime.toLocaleString("pt-BR", {
+                timeZone: "America/Sao_Paulo",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })
+            : "Sincronizando..."}
+        </div>
+
+        {/* Guia de face */}
+        {modoQuiosque !== "feedback" && (
+          <div className="face-overlay">
+            <div className={`face-guide ${faceDetectada ? "face-detected" : ""}`}></div>
+          </div>
+        )}
+
+        {/* Contagem regressiva */}
+        {modoQuiosque === "contagem" && (
+          <div className="timer-overlay">
+            <span className="timer-count">{contadorTempo}</span>
+          </div>
+        )}
+
+        {/* Status e informações */}
+        <div className="status-overlay">
+          {modoQuiosque === "feedback" ? (
+            // Resultados do reconhecimento facial
+            <>
+              {sucesso ? (
+                <>
+                  <div className="feedback-user">{usuarioReconhecido}</div>
+                  <div className="feedback-message success">
+                    <FaCheck className="sucesso-icon" /> Ponto registrado com sucesso!
+                  </div>
+                </>
+              ) : erro && erro.includes("já registrou seu ponto hoje") ? (
+                <>
+                  <div className="feedback-user">{usuarioReconhecido}</div>
+                  <div className="feedback-message warning">
+                    Você já registrou seu ponto hoje. Retorne amanhã.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="feedback-user">Não reconhecido</div>
+                  <div className="feedback-message error">
+                    {erro}
+                    {erro && erro.includes("não reconhecido") && (
+                      <p className="erro-dica">
+                        Solicite ao administrador que cadastre sua foto.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            // Status de detecção/processamento
+            <p className="status-text">
+              {modoQuiosque === "detectando" && "Posicione seu rosto no centro para registrar ponto"}
+              {modoQuiosque === "standby" && "Aproxime-se para ativar o sistema"}
+              {modoQuiosque === "contagem" && "Prepare-se para a foto"}
+              {modoQuiosque === "processando" && "Processando, aguarde..."}
+            </p>
+          )}
+        </div>
+
+        {/* Placeholder invisível para o canvas usado para capturar a foto */}
         <canvas ref={canvasRef} style={{ display: "none" }} />
+        
+        {/* Debug panel - somente visível quando debugMode é true */}
+        {debugMode && (
+          <div className="debug-panel">
+            <h4>Debug</h4>
+            <button 
+              className="debug-button" 
+              onClick={async () => {
+                const response = await fetch(
+                  "https://faceponto-reconhecimento-facial-production.up.railway.app/status"
+                );
+                const status = await response.json();
+                console.log("Status do serviço:", status);
+                alert("Veja o console para detalhes do serviço.");
+              }}
+            >
+              API
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

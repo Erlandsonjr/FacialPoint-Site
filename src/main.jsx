@@ -1,4 +1,4 @@
-import React, { Children } from 'react';
+import React from 'react';
 import ReactDom from 'react-dom/client';
 import App from './App.jsx';
 import "./index.css"
@@ -10,6 +10,7 @@ import RegistroPonto from './components/Registro/registro.jsx';
 import Home from './components/Home/home.jsx';
 import Perfil from './components/Perfil/Perfil.jsx';
 import Admin from './components/AdminDash/admin.jsx';
+import HomePage from './components/Home/HomePage.jsx';
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
+        element: <HomePage />,
+      },
+      {
+        path: "login",
         element: <Login />,
       },
       {

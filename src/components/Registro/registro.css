@@ -27,8 +27,30 @@ html, body {
     height: 100%;
     min-height: 100vh;
     box-sizing: border-box;
-    overflow: hidden; /* Evita scroll desnecessário */
+    overflow-x: hidden; /* Permite rolagem vertical se necessário */
     background: linear-gradient(135deg, #333333, #555555);
+}
+
+/* Adicionar estas regras para evitar scroll horizontal */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Modificar o container-registro para garantir que não haja overflow */
+.container-registro {
+    width: 100vw;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* Garantir que o conteúdo não ultrapasse os limites */
+.registro-content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .registro-sucesso {
@@ -39,35 +61,102 @@ html, body {
   animation: fadeIn 0.5s ease;
 }
 
+/* Ajuste no container principal para ocupar 100% da altura disponível */
 .container-registro {
-    min-height: 100vh;
-    height: 100vh; /* Fixa a altura em 100% da viewport */
+    height: 100vh; /* Altura exata da viewport */
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    padding: 0; /* Remove o padding para maximizar espaço */
+    padding: 0; /* Remove padding para maximizar espaço */
     overflow: hidden; /* Impede rolagem */
     background: linear-gradient(135deg, #333333, #555555);
 }
 
+/* Container que mantém o layout geral */
 .registro-content {
     width: 100%;
-    max-width: 100%; /* Permite usar toda a largura */
-    height: 100vh; /* Usa toda a altura da viewport */
-    margin: 0;
-    padding: 20px;
+    max-width: 800px;
+    height: auto;
+    min-height: auto;
+    margin: 0 auto;
+    padding: 15px;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(15px);
-    border-radius: 0; /* Remove arredondamento para tela cheia */
-    box-shadow: none; /* Remove sombra quando em tela cheia */
-    color: var(--text-primary);
-    transition: all 0.3s ease;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    overflow-y: auto; /* Permite rolagem apenas se necessário */
+    overflow: hidden;
+}
+
+/* Área da câmera com proporção consistente */
+.camera-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    min-height: 350px;
+}
+
+/* Frame da câmera com proporção fixa */
+.camera-frame {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* Proporção 4:3 */
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: #000;
+}
+
+/* Preview da câmera ocupa todo o espaço disponível */
+.camera-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* Container da foto capturada com a mesma proporção da câmera */
+.foto-capturada {
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* Mesma proporção da câmera */
+    position: relative;
+    margin: 15px 0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Imagem da foto capturada ocupa todo o espaço do container */
+.foto-preview-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+}
+
+/* Feedback tem altura adaptável */
+.registro-feedback {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    animation: fadeIn 0.5s ease;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
 }
 
 .registro-header {
@@ -75,18 +164,18 @@ html, body {
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     text-align: center;
 }
 
 .registro-header h1 {
     margin: 0;
-    font-size: 28px;
+    font-size: 1.5rem; /* Reduz tamanho do título */
     font-weight: var(--font-weight-medium);
     font-family: var(--font-primary);
     letter-spacing: -0.02em;
     color: #f5a623;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .dicas-button {
@@ -199,13 +288,150 @@ html, body {
 }
 
 .camera-container {
-    flex: 1; /* Permite que a câmera cresça e ocupe espaço disponível */
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    margin: 10px 0;
+    margin: 0;
     background: rgba(255, 255, 255, 0.05);
     border-radius: var(--border-radius);
-    padding: 15px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+/* Primeiramente, vamos modificar o container da câmera e da foto para posicionamento relativo */
+.camera-frame, .foto-capturada {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* Proporção 4:3 */
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: #000;
+}
+
+/* Adicionar um overlay de informações por cima da câmera/foto */
+.info-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Estilo para a área de horário no overlay */
+.overlay-time {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+
+/* Estilo para o nome do usuário no overlay */
+.overlay-user {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Estilo para as mensagens de feedback no overlay */
+.overlay-message {
+    width: 100%;
+    max-width: 320px;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.overlay-message.success {
+    background-color: rgba(76, 175, 80, 0.8);
+    border-left: 3px solid #4caf50;
+}
+
+.overlay-message.error {
+    background-color: rgba(244, 67, 54, 0.8);
+    border-left: 3px solid #f44336;
+}
+
+.overlay-message.warning {
+    background-color: rgba(255, 152, 0, 0.8);
+    border-left: 3px solid #ff9800;
+}
+
+/* Responsividade para diferentes tamanhos de tela */
+@media (min-width: 768px) {
+    .registro-content {
+        max-width: 750px;
+        margin: 15px auto;
+    }
+    
+    .camera-frame, .foto-capturada {
+        padding-bottom: 60%; /* Ligeiramente mais largo em telas maiores */
+    }
+}
+
+@media (max-width: 480px) {
+    .registro-content {
+        padding: 10px;
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    .camera-container {
+        padding: 10px;
+    }
+    
+    .camera-frame, .foto-capturada {
+        width: 100%;
+        height: 0;
+        padding-bottom: 133%; /* Proporção vertical 3:4 para celulares */
+        aspect-ratio: 3/4;
+    }
+    
+    /* Certificar-se que a imagem e vídeo preenchem corretamente */
+    .camera-preview, .foto-preview-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    /* Ajustar o overlay de informações para proporcionar mais espaço */
+    .info-overlay {
+        padding: 15px 10px;
+    }
+    
+    /* Reduzir tamanho do texto do usuário para caber melhor */
+    .overlay-user {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .camera-frame {
+        aspect-ratio: unset; /* Remover esta definição que estava causando conflito */
+    }
+}
+
+@media (max-height: 600px) {
+    .registro-feedback {
+        max-height: calc(100vh - 150px);
+    }
 }
 
 .camera-start {
@@ -232,21 +458,21 @@ html, body {
 }
 
 .camera-frame {
-    flex: 1; /* Permite que o frame da câmera cresça */
-    width: 100%;
+    flex: 1;
     position: relative;
     border-radius: var(--border-radius);
     overflow: hidden;
     background: #000;
-    min-height: 300px; /* Altura mínima para evitar colapso */
+    min-height: 0; /* Permite que encolha abaixo da altura mínima típica */
+    width: 100%;
 }
 
 .camera-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background: #000;
-    border-radius: 10px;
-    display: block;
     object-fit: cover;
 }
 
@@ -644,14 +870,6 @@ html, body {
   font-size: 1.1rem;
 }
 
-.foto-capturada {
-  width: 100%;
-  margin: 15px 0;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
 /* Adicione ao arquivo registro.css */
 .registro-feedback {
   display: flex;
@@ -804,61 +1022,564 @@ html, body {
     }
 
     .container-registro {
-        padding: 10px;
+        padding: 5px;
         align-items: flex-start;
     }
-
-    .camera-container {
-        padding: 10px;
-    }
-
-    .dicas-container {
-        padding: 15px;
-    }
-
-    .face-guide {
-        width: 100px;
-        height: 100px;
-    }
-
-    .camera-controls {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-    }
     
-    .control-button,
-    .camera-button {
-        width: auto;
-        padding: 8px 12px;
-        font-size: 0.8rem;
-    }
-    
-    .capture-button {
-        height: 50px;
-        width: 50px;
-    }
-}
-
-@media (min-width: 768px) {
     .registro-content {
-        max-width: 800px; /* Limita a largura em telas grandes */
-        height: auto;
-        min-height: 80vh; /* Altura mínima mas não forçando 100vh */
-        margin: 20px;
-        border-radius: 15px; /* Restaura arredondamento */
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Restaura sombra */
+        padding: 10px;
+        border-radius: 0;
     }
-}
-
-@media (max-height: 600px) {
+    
     .registro-header h1 {
         font-size: 22px;
         margin-bottom: 10px;
     }
     
+    .face-guide {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .usuario-reconhecido h2 {
+        font-size: 1.5rem;
+    }
+    
+    .timer-count {
+        font-size: 4rem;
+    }
+}
+
+/* Ajustar para telas pequenas */
+@media (max-width: 480px) {
+    .camera-frame, .foto-capturada {
+        width: 100%;
+        height: 0;
+        padding-bottom: 133%; /* Proporção vertical 3:4 para celulares */
+        aspect-ratio: 3/4;
+    }
+    
+    /* Certificar-se que a imagem e vídeo preenchem corretamente */
+    .camera-preview, .foto-preview_image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    /* Ajustar o overlay de informações para proporcionar mais espaço */
+    .info-overlay {
+        padding: 15px 10px;
+    }
+    
+    /* Reduzir tamanho do texto do usuário para caber melhor */
+    .overlay-user {
+        font-size: 1.3rem;
+    }
+}
+
+/* Remover definições conflitantes */
+@media (max-width: 768px) {
     .camera-frame {
+        aspect-ratio: unset; /* Remover esta definição que estava causando conflito */
+    }
+}
+
+@media (max-height: 600px) {
+    .camera-container {
+        max-height: calc(100vh - 150px);
         min-height: 200px;
     }
+}
+
+/* Adicionar ao seu CSS */
+.responsive-content {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 300px;
+  max-height: none;
+}
+
+/* Adicione este estilo para a mensagem de registro duplicado dentro do nome do usuário */
+.registro-duplicado-message {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background: rgba(255, 152, 0, 0.1);
+  border-left: 3px solid #ff9800;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.registro-duplicado-message p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+  color: #ff9800;
+}
+
+.registro-duplicado-message .erro-dica {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.registro-sucesso-message {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background: rgba(76, 175, 80, 0.1);
+  border-left: 3px solid #4caf50;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.registro-sucesso-message p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+  color: #4caf50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.registro-sucesso-message .sucesso-icon {
+  font-size: 1.1rem;
+}
+
+.registro-sucesso-message .sucesso-dica {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Estilos para a versão de tela cheia */
+
+.fullscreen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  z-index: 1000;
+}
+
+.camera-fullscreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1001;
+}
+
+.camera-fullscreen-video,
+.foto-fullscreen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dim-video {
+  filter: brightness(0.5) grayscale(0.5);
+  transition: filter 1s ease;
+}
+
+/* Sobreposições */
+.header-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  z-index: 1010;
+  text-align: center;
+}
+
+.header-overlay h1 {
+  margin: 0 0 10px;
+  font-size: 1.8rem;
+  font-weight: var(--font-weight-medium);
+  color: #f5a623;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.time-overlay {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 1rem;
+  z-index: 1020;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.status-overlay {
+  position: absolute;
+  bottom: 0; /* Eliminará o espaço entre o overlay e a borda da tela */
+  left: 0;
+  width: 100%;
+  padding: 30px 20px 20px; /* Aumentado padding superior para manter espaço visual */
+  text-align: center;
+  z-index: 1020;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+}
+
+.status-text {
+  display: inline-block;
+  font-size: 1.1rem;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  border-radius: 30px;
+  margin: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-user {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 0.5s ease;
+}
+
+.feedback-message {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 15px;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  animation: fadeInUp 0.5s ease 0.2s both;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.feedback-message.success {
+  background-color: rgba(76, 175, 80, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-message.warning {
+  background-color: rgba(255, 152, 0, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-message.error {
+  background-color: rgba(244, 67, 54, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.erro-dica {
+  font-size: 0.9rem;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Face guide centralizado na tela */
+.face-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1005;
+}
+
+.face-guide {
+  width: 250px;
+  height: 250px;
+  border: 3px dashed rgba(245, 166, 35, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.face-guide.face-detected {
+  border-color: #4caf50;
+  border-style: solid;
+  animation: pulseBorder 1.5s infinite;
+}
+
+.timer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1010;
+}
+
+.timer-count {
+  font-size: 8rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 20px rgba(245, 166, 35, 0.8);
+  animation: pulseSize 1s infinite;
+}
+
+/* Debug panel */
+.debug-panel {
+  position: absolute;
+  top: 80px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 8px;
+  z-index: 1050;
+  font-size: 0.9rem;
+}
+
+.debug-panel h4 {
+  color: #f5a623;
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.debug-button {
+  background: rgba(245, 166, 35, 0.3);
+  border: 1px solid #f5a623;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseBorder {
+  0% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(76, 175, 80, 0.5); }
+  70% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 0 20px rgba(76, 175, 80, 0); }
+  100% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+@keyframes pulseSize {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .header-overlay h1 {
+    font-size: 1.5rem;
+  }
+  
+  .face-guide {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .timer-count {
+    font-size: 6rem;
+  }
+  
+  .feedback-user {
+    font-size: 1.7rem;
+  }
+  
+  .feedback-message {
+    font-size: 1rem;
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-overlay {
+    padding: 15px;
+  }
+  
+  .header-overlay h1 {
+    font-size: 1.2rem;
+  }
+  
+  .time-overlay {
+    top: 60px; /* Posicionar abaixo do cabeçalho */
+    right: 10px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    z-index: 1015; /* Garantir que esteja acima dos outros elementos */
+  }
+  
+  /* Ajuste para o cabeçalho em telas pequenas */
+  .header-overlay {
+    padding: 10px 15px;
+    height: 50px; /* Altura fixa para o cabeçalho */
+  }
+  
+  .header-overlay h1 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .time-overlay {
+    top: 55px; /* Ajuste para telas muito pequenas */
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .header-overlay h1 {
+    font-size: 1rem;
+  }
+}
+
+/* Garantir que o horário não sobreponha em telas médias */
+@media (min-width: 481px) and (max-width: 768px) {
+  .time-overlay {
+    top: 15px;
+    right: 15px;
+  }
+  
+  .header-overlay {
+    padding-right: 100px; /* Espaço para o horário */
+  }
+}
+
+/* Correção para posicionamento das mensagens em dispositivos móveis */
+@media (max-width: 480px) {
+  /* Remover transformação que está causando desalinhamento */
+  .feedback-message.success,
+  .feedback-message.warning, 
+  .feedback-message.error {
+    width: auto;
+    max-width: 90%;
+    position: static;
+    transform: none;
+    left: auto;
+    margin: 0 auto;
+  }
+  
+  /* Centralizar adequadamente o conteúdo na sobreposição de status */
+  .status-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  /* Correção para o horário em telas pequenas */
+  .time-overlay {
+    top: 60px; /* Posicionar abaixo do cabeçalho */
+    right: 10px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    z-index: 1015; /* Garantir que esteja acima dos outros elementos */
+  }
+  
+  /* Ajuste para o cabeçalho em telas pequenas */
+  .header-overlay {
+    padding: 10px 15px;
+    height: 50px; /* Altura fixa para o cabeçalho */
+  }
+  
+  .header-overlay h1 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+/* Correção para telas muito pequenas */
+@media (max-width: 360px) {
+  .time-overlay {
+    top: 55px; /* Ajuste para telas muito pequenas */
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .header-overlay h1 {
+    font-size: 1rem;
+  }
+}
+
+/* Adicione estas correções ao final do seu arquivo CSS */
+
+/* Correção definitiva para mensagens em dispositivos móveis */
+@media (max-width: 480px) {
+  /* Container principal de status */
+  .status-overlay {
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: center;
+  }
+
+  /* Nome do usuário */
+  .feedback-user {
+    width: 100%;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 10px;
+    padding: 0 5px;
+    box-sizing: border-box;
+  }
+
+  /* Mensagens de feedback - simplificadas */
+  .feedback-message {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 10px;
+    position: relative !important;
+    left: 0 !important;
+    transform: none !important;
+    display: block !important;
+    text-align: center;
+  }
+
+  /* Corrigir overflow horizontal */
+  body, html {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Garantir que o texto não ultrapasse a área visível */
+  .feedback-message p, .feedback-message .erro-dica {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Reduzir tamanho da fonte para caber melhor */
+  .feedback-message {
+    font-size: 0.9rem !important;
+  }
 }
