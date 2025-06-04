@@ -790,7 +790,7 @@ html, body {
 }
 
 .dim-video {
-  filter: brightness(0.5) grayscale(0.5);
+  filter: brightness(0); /* Alterado de 0.5 para 0, tornando completamente escuro */
   transition: filter 1s ease;
 }
 
@@ -1183,7 +1183,7 @@ html, body {
 }
 
 .dim-video {
-  filter: brightness(0.5) grayscale(0.5);
+  filter: brightness(0); /* Alterado de 0.5 para 0, tornando completamente escuro */
   transition: filter 1s ease;
 }
 

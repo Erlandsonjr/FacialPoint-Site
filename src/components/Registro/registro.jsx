@@ -43,6 +43,9 @@ function RegistroPonto() {
         await fetchServerTime();
         await iniciarCamera();
         setModoQuiosque("detectando");
+        
+        // Adicionar o manipulador de visibilidade
+        document.addEventListener('visibilitychange', handleVisibilityChange);
       } catch (error) {
         setErro(
           "Erro ao inicializar o sistema. Por favor, recarregue a página."
@@ -57,8 +60,39 @@ function RegistroPonto() {
     return () => {
       pararCamera();
       limparTodosTimers();
+      // Remover event listener de visibilidade
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // Adicione esta nova função que é chamada quando a visibilidade muda
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      console.log('Guia voltou ao foco, reiniciando câmera e detecção');
+      
+      // Verificar se o vídeo está pausado e retomar
+      if (videoRef.current && videoRef.current.paused && videoRef.current.srcObject) {
+        videoRef.current.play().catch(err => {
+          console.log('Erro ao retomar vídeo:', err);
+          // Se falhar ao retomar o vídeo, tente reiniciar a câmera completamente
+          setTimeout(() => {
+            pararCamera();
+            iniciarCamera().then(() => {
+              // Reiniciar detecção facial após reiniciar a câmera
+              if (modoQuiosque === "detectando" || modoQuiosque === "standby") {
+                iniciarDeteccaoFacial();
+              }
+            });
+          }, 300);
+        });
+      }
+      
+      // Reiniciar a detecção se estiver no modo apropriado
+      if ((modoQuiosque === "detectando" || modoQuiosque === "standby") && !detectionRef.current) {
+        iniciarDeteccaoFacial();
+      }
+    }
+  };
 
   const fetchServerTime = async () => {
     try {
@@ -298,7 +332,18 @@ function RegistroPonto() {
   };
 
   const iniciarDeteccaoFacial = () => {
-    if (!videoRef.current || !modelsLoaded || !stream) {
+    if (!videoRef.current || !modelsLoaded) {
+      console.log("Vídeo ou modelos não disponíveis");
+      return;
+    }
+
+    // Se o stream estiver inativo, tente reiniciar a câmera
+    if (!stream || stream.getTracks().some(track => !track.enabled || track.readyState !== 'live')) {
+      console.log("Stream inativo, reiniciando câmera");
+      iniciarCamera().then(() => {
+        // Tentar novamente iniciar detecção após reiniciar câmera
+        setTimeout(iniciarDeteccaoFacial, 500);
+      });
       return;
     }
 
@@ -312,6 +357,13 @@ function RegistroPonto() {
 
     if (detectionRef.current) {
       clearInterval(detectionRef.current);
+    }
+
+    // Garantir que o vídeo esteja tocando
+    if (videoRef.current && videoRef.current.paused && videoRef.current.srcObject) {
+      videoRef.current.play().catch(err => {
+        console.log("Erro ao tentar reproduzir vídeo:", err);
+      });
     }
 
     detectionRef.current = setInterval(async () => {
@@ -806,7 +858,7 @@ function RegistroPonto() {
       <div className="fullscreen-container">
         {/* Câmera em tela cheia */}
         <div className={`camera-fullscreen ${modoQuiosque === "standby" ? "dim-video" : ""}`}>
-          {modoQuiosque !== "feedback" ? (
+          {modoQuiosque !== "feedback" && modoQuiosque !== "processando" ? (
             <video
               ref={videoRef}
               autoPlay
@@ -826,11 +878,6 @@ function RegistroPonto() {
         {/* Sobreposições - sempre visíveis */}
         <div className="header-overlay">
           <h1>Registro de Ponto Automático</h1>
-          {modoQuiosque === "standby" && (
-            <div className="standby-indicator">
-              <FaDesktop /> Aproxime-se para registrar ponto
-            </div>
-          )}
         </div>
 
         {/* Horário sobreposto */}
@@ -883,11 +930,6 @@ function RegistroPonto() {
                   <div className="feedback-user">Não reconhecido</div>
                   <div className="feedback-message error">
                     {erro}
-                    {erro && erro.includes("não reconhecido") && (
-                      <p className="erro-dica">
-                        Solicite ao administrador que cadastre sua foto.
-                      </p>
-                    )}
                   </div>
                 </>
               )}
@@ -898,7 +940,7 @@ function RegistroPonto() {
               {modoQuiosque === "detectando" && "Posicione seu rosto no centro para registrar ponto"}
               {modoQuiosque === "standby" && "Aproxime-se para ativar o sistema"}
               {modoQuiosque === "contagem" && "Prepare-se para a foto"}
-              {modoQuiosque === "processando" && "Processando, aguarde..."}
+              {modoQuiosque === "processando" && "Processando reconhecimento facial, aguarde..."}
             </p>
           )}
         </div>
