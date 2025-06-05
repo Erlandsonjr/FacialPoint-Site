@@ -1,4 +1,3 @@
-
 import Login from './components/Login_Cadastro/Login';
 import { Outlet, useLocation } from 'react-router-dom';
 

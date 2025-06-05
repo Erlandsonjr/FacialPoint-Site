@@ -1,0 +1,331 @@
+.user-details-container {
+    background-color: var(--bg-secondary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-details-header {
+    background-color: var(--bg-primary);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 20px;
+    transition: color 0.2s ease;
+}
+
+.back-button:hover {
+    color: var(--primary-hover);
+}
+
+.user-details-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.user-details-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Profile Styles */
+.user-profile {
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar svg {
+    width: 80%;
+    height: 80%;
+    color: var(--text-muted);
+}
+
+.profile-info h1 {
+    margin: 0 0 10px 0;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+}
+
+.profile-email {
+    margin: 0 0 8px 0;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.profile-status {
+    margin: 5px 0 0 0;
+    font-size: 1rem;
+}
+
+.status-active {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+.status-inactive {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.profile-details {
+    padding: 30px;
+}
+
+.details-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Attendance Styles */
+.attendance-section {
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attendance-section h3 svg {
+    color: var(--primary-color);
+}
+
+.attendance-table-container {
+    overflow-x: auto;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-table th, 
+.attendance-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.attendance-table th {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.attendance-table tr:last-child td {
+    border-bottom: none;
+}
+
+.attendance-table tr:hover {
+    background-color: var(--bg-hover);
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-entry {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: var(--success-color);
+}
+
+.badge-exit {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #1976d2;
+}
+
+.empty-attendance {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.empty-attendance svg {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-attendance p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Loading and Error States */
+.user-details-loading,
+.user-details-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    padding: 30px;
+    text-align: center;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(255, 145, 0, 0.2);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.user-details-error {
+    color: var(--danger);
+}
+
+.user-details-error svg {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.user-details-error button {
+    margin-top: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.user-details-error button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .user-details-content {
+        padding: 20px 15px;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .profile-avatar {
+        margin: 0 auto;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-details-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .back-button {
+        margin-right: 0;
+    }
+    
+    .profile-header,
+    .profile-details,
+    .attendance-section {
+        padding: 20px 15px;
+    }
+}

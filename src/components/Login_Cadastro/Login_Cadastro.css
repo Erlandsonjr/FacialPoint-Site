@@ -634,3 +634,856 @@ body {
         padding: 8px !important;
     }
 }
+
+.input-field-group {
+  margin-bottom: 15px;
+}
+
+.input-field-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+/* Estilos para dispositivos móveis */
+@media (max-width: 480px) {
+  .input-field-group {
+    margin-bottom: 12px;
+  }
+}
+
+/* Adicione ou modifique os estilos para os campos de horário */
+
+.time-input-container {
+    display: flex;
+    flex-direction: column; /* Empilha os grupos de entrada e saída */
+    gap: 20px; /* Espaço entre os grupos de entrada e saída */
+    margin-bottom: 20px;
+    margin-right: 20px; /* Mantém o mesmo recuo dos outros campos */
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left; /* Alinha o label à esquerda */
+}
+
+.time-input-group label {
+    font-size: 14px; /* Tamanho similar aos placeholders */
+    color: rgba(255, 255, 255, 0.8); /* Cor suave, mas legível */
+    margin-bottom: 8px;
+    font-weight: var(--font-weight-regular);
+}
+
+.time-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.time-input-field {
+    position: relative; /* Para o ícone */
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 30px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    padding: 8px 15px;
+}
+
+.time-selector {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.time-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+}
+
+.time-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.time-button {
+    background: transparent;
+    border: none;
+    color: #f5a623;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    transition: all 0.2s ease;
+}
+
+.time-button:hover {
+    color: #ff7b00;
+    transform: scale(1.1);
+}
+
+.time-button:active {
+    transform: scale(0.95);
+}
+
+.time-button:focus {
+    outline: none;
+}
+
+.time-value {
+    font-family: var(--font-secondary), sans-serif;
+    font-size: 18px;
+    color: #fff;
+    user-select: none;
+    min-width: 30px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.time-separator {
+    font-size: 20px;
+    color: #f5a623;
+    margin: 0 5px;
+    font-weight: bold;
+}
+
+.time-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 2px;
+    text-transform: uppercase;
+}
+
+/* Ajustes responsivos para os campos de horário */
+@media (max-width: 480px) {
+    .time-input-container {
+        margin-right: 0; /* Remove o recuo em telas menores se necessário */
+        gap: 15px;
+    }
+
+    .time-input-field input[type="text"] {
+        font-size: 14px;
+        padding: 12px;
+        padding-right: 40px; /* Ajusta o padding para o ícone */
+    }
+
+    .time-input-field .time-icon {
+        font-size: 16px;
+        right: 12px;
+    }
+
+    .time-input-group label {
+        font-size: 13px;
+    }
+}
+
+/* Estilos para os horários semanais */
+.horarios-semana-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 25px;
+    margin-right: 20px;
+}
+
+.horarios-semana-titulo {
+    color: #f5a623;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.aplicar-todos-container {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.aplicar-todos-button {
+    background: linear-gradient(135deg, #f5a623, #ff7b00);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.aplicar-todos-button:hover {
+    transform: scale(1.03);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dia-semana-container {
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+.dia-semana-header {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dia-semana-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.dia-semana-checkbox input {
+    margin-right: 10px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.dia-semana-nome {
+    font-weight: 500;
+}
+
+.horarios-container {
+    display: flex;
+    padding: 12px;
+    gap: 15px;
+}
+
+.horarios-container .time-input-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.horarios-container label {
+    margin-bottom: 5px;
+    display: block;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Ajustes responsivos */
+@media (max-width: 600px) {
+    .horarios-container {
+        flex-direction: column;
+    }
+    
+    .dia-semana-container {
+        margin-bottom: 15px;
+    }
+    
+    .aplicar-todos-button {
+        width: 100%;
+    }
+}
+
+/* Adicione estes novos estilos ao final do seu arquivo CSS */
+
+/* Estilos para o novo formulário de cadastro em etapas */
+.cadastro-container {
+  max-width: 520px;
+  padding-top: 20px;
+}
+
+/* Sistema de etapas */
+.etapas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.etapa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.etapa-numero {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.etapa-nome {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+}
+
+.etapa-linha {
+  flex-grow: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 8px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 0;
+  transition: background 0.3s ease;
+}
+
+.etapa-ativa .etapa-numero {
+  background: linear-gradient(135deg, #f5a623, #ff7b00);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(245, 166, 35, 0.4);
+}
+
+.etapa-ativa .etapa-nome {
+  color: #f5a623;
+  font-weight: 500;
+}
+
+.etapa-completa .etapa-numero {
+  background: #4CAF50;
+  color: #fff;
+}
+
+.etapa-completa .etapa-nome {
+  color: #4CAF50;
+}
+
+/* Animações para transições */
+.fade-in {
+  animation: fadeInAnimation 0.4s ease forwards;
+}
+
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Área de conteúdo de cada etapa */
+.etapa-conteudo {
+  padding: 5px;
+}
+
+/* Botões de navegação */
+.botoes-navegacao {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+.botao-primario {
+  background: linear-gradient(135deg, #f5a623, #ff7b00);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 30px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.botao-primario:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.5);
+}
+
+.botao-secundario {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 30px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: center;
+}
+
+.botao-secundario:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Estilos para a etapa de upload de foto */
+.foto-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.foto-input {
+  display: none;
+}
+
+.foto-drop-area {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.foto-drop-area:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #f5a623;
+}
+
+.foto-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.upload-icon {
+  font-size: 30px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
+}
+
+.foto-placeholder p {
+  font-size: 14px;
+  margin: 0 0 5px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.foto-placeholder span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.foto-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.foto-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.foto-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.foto-preview:hover .foto-overlay {
+  opacity: 1;
+}
+
+.foto-overlay svg {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.foto-overlay span {
+  font-size: 12px;
+}
+
+.foto-nome {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #f5a623;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.instrucoes-foto {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.instrucoes-foto h4 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #f5a623;
+}
+
+.instrucoes-foto ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instrucoes-foto li {
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Estilos para a etapa de horários */
+.horarios-config-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden; /* Crucial for containing children */
+}
+
+.horarios-tabs {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Line separating tabs from content below */
+  overflow: hidden; /* Ensures tabs themselves don't break out */
+}
+
+.horario-tab {
+  flex: 1; /* Each tab takes equal space */
+  background: transparent; /* Inactive tabs are transparent */
+  border: none;
+  /* Bottom border for active state indication, transparent for inactive */
+  border-bottom: 3px solid transparent; 
+  color: rgba(255, 255, 255, 0.7); /* Subdued color for inactive text */
+  padding: 12px 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500; /* Regular weight for inactive tabs */
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden; /* Prevents text from overflowing the button */
+  text-overflow: ellipsis;
+  position: relative;
+  transition: background-color 0.2s ease, color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+.horario-tab.ativo {
+  background: rgba(255, 255, 255, 0.08); /* Slightly lighter background for active tab */
+  color: #f5a623; /* Brand color for active tab text */
+  font-weight: 600; /* Bolder text for active tab */
+  border-bottom-color: #f5a623; /* Brand color for the bottom border indicator */
+}
+
+.horario-tab:hover:not(.ativo) {
+  background: rgba(255, 255, 255, 0.04); /* Subtle hover background for inactive tabs */
+  color: #ffffff; /* Brighter text on hover for inactive tabs */
+}
+
+/* Ajustes responsivos para os botões */
+@media (max-width: 480px) {
+  .horario-tab {
+    padding: 10px 5px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .horario-tab {
+    padding: 8px 4px;
+    font-size: 13px;
+  }
+}
+
+.horarios-padrao {
+  padding: 15px;
+}
+
+.grupo-dias {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.grupo-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.grupo-titulo h4 {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Switch toggle */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #f5a623;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #f5a623;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.horario-inputs {
+  display: flex;
+  gap: 15px;
+}
+
+.horario-grupo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.horario-grupo label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.horario-grupo input {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-family: inherit;
+}
+
+.horario-grupo input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.horarios-personalizados {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dia-horario-row {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.dia-nome {
+  width: 100px;
+  padding-right: 15px;
+}
+
+.switch-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.switch-mini {
+  position: relative;
+  width: 36px;
+  height: 18px;
+  margin-left: 10px;
+}
+
+.switch-mini input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-mini {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: .4s;
+}
+
+.slider-mini:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider-mini {
+  background-color: #f5a623;
+}
+
+input:checked + .slider-mini:before {
+  transform: translateX(18px);
+}
+
+.slider-mini.round {
+  border-radius: 34px;
+}
+
+.slider-mini.round:before {
+  border-radius: 50%;
+}
+
+.dia-horarios {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dia-horarios input {
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-family: inherit;
+  width: 100%;
+}
+
+.dia-horarios input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.horario-ate {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+/* Responsividade */
+@media (max-width: 520px) {
+  .horario-inputs {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .dia-horarios {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .dia-horario-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .dia-nome {
+    width: 100%;
+    padding-right: 0;
+  }
+  
+  .etapa_numero {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  
+  .etapa-nome {
+    font-size: 11px;
+  }
+  
+  .foto-drop-area {
+    width: 150px;
+    height: 150px;
+  }
+}
+

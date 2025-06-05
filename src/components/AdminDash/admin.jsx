@@ -16,6 +16,7 @@ function Admin() {
         fetchUsers();
     }, []);
 
+    // Filtro de busca existente
     useEffect(() => {
         if (users.length > 0) {
             setFilteredUsers(
@@ -39,6 +40,7 @@ function Admin() {
             const response = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/todos', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                     'Cache-Control': 'no-cache'
                 }
             });

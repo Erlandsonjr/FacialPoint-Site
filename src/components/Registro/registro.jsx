@@ -27,6 +27,7 @@ function RegistroPonto() {
   const [faceDetectada, setFaceDetectada] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [tipoRegistroAtual, setTipoRegistroAtual] = useState(""); // Adicionado aqui
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -537,7 +538,7 @@ function RegistroPonto() {
     try {
       setErro("");
       setCarregando(true);
-
+      
       // Validar foto
       if (!foto) {
         setErro("Erro: Foto não capturada.");
@@ -548,7 +549,6 @@ function RegistroPonto() {
       console.log("Iniciando processo de reconhecimento facial");
 
       // 1. Obter lista de usuários cadastrados com suas codificações faciais
-      // Usar endpoint público temporariamente para desbloquer o desenvolvimento
       console.log("Obtendo lista de usuários...");
       const usuariosResponse = await fetch(
         "https://faceponto-banco-dados-production.up.railway.app/public/usuarios/codificacoes",
@@ -710,6 +710,7 @@ function RegistroPonto() {
         throw new Error("Rosto não reconhecido. Verifique se você está cadastrado no sistema.");
       }
 
+      // Obter dados do usuário reconhecido
       const usuarioReconhecidoId = verificacaoResponse.data.usuarioId;
       const usuarioReconhecido = usuariosMap[usuarioReconhecidoId];
       
@@ -717,10 +718,91 @@ function RegistroPonto() {
         throw new Error("Usuário correspondente não encontrado no sistema.");
       }
 
-      // 4. Verificar se o usuário já registrou ponto hoje
-      const hoje = new Date().toISOString().split('T')[0];
+      // Obtém os dados completos do usuário para verificar os horários
+      const usuarioResponse = await fetch(
+        `https://faceponto-banco-dados-production.up.railway.app/usuarios/${usuarioReconhecidoId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!usuarioResponse.ok) {
+        throw new Error("Erro ao obter dados do usuário");
+      }
+
+      const usuarioData = await usuarioResponse.json();
+      
+      // Obter horários de entrada e saída da estrutura correta
+      let horarioEntrada = "08:00";
+      let horarioSaida = "17:00";
+      
+      // Verificar a estrutura correta dos horários no objeto usuário
+      if (usuarioData.horarioTrabalho && usuarioData.horarioTrabalho.entrada && usuarioData.horarioTrabalho.saida) {
+        // Formato esperado pelo modelo mongoose
+        horarioEntrada = usuarioData.horarioTrabalho.entrada;
+        horarioSaida = usuarioData.horarioTrabalho.saida;
+      } else if (usuarioData.horario_entrada && usuarioData.horario_saida) {
+        // Formato alternativo
+        horarioEntrada = usuarioData.horario_entrada;
+        horarioSaida = usuarioData.horario_saida;
+      }
+
+      // Verificar qual tipo de registro baseado no horário atual
+      const dataAtual = serverTime ? new Date(serverTime) : new Date();
+      const horaAtual = dataAtual.getHours();
+      const minutosAtual = dataAtual.getMinutes();
+      const totalMinutosAtual = horaAtual * 60 + minutosAtual;
+
+      // Converter horários de entrada/saída para minutos desde 00:00
+      const [horaEntrada, minEntrada] = horarioEntrada.split(':').map(Number);
+      const [horaSaida, minSaida] = horarioSaida.split(':').map(Number);
+      
+      const totalMinutosEntrada = horaEntrada * 60 + minEntrada;
+      const totalMinutosSaida = horaSaida * 60 + minSaida;
+      
+      // Define a janela de tolerância (15 minutos antes e depois)
+      const janelaToleranciaMins = 15;
+      
+      // Determinar o tipo de registro baseado na proximidade dos horários
+      let tipoRegistro = null;
+      
+      if (Math.abs(totalMinutosAtual - totalMinutosEntrada) <= janelaToleranciaMins) {
+        tipoRegistro = "entrada";
+      } else if (Math.abs(totalMinutosAtual - totalMinutosSaida) <= janelaToleranciaMins) {
+        tipoRegistro = "saida";
+      } else {
+        // Fora da janela permitida - mensagem mais amigável com indicação dos horários permitidos
+        const formatarHora = (horas, mins) => `${String(horas).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+        
+        // Calcular as janelas permitidas
+        const entradaInicio = formatarHora(Math.max(0, horaEntrada - (minEntrada > 15 ? 1 : 0)), 
+                                         (minEntrada - 15 + 60) % 60);
+        const entradaFim = formatarHora(Math.min(23, horaEntrada + (minEntrada + 15 >= 60 ? 1 : 0)),
+                                      (minEntrada + 15) % 60);
+                                      
+        const saidaInicio = formatarHora(Math.max(0, horaSaida - (minSaida > 15 ? 1 : 0)),
+                                       (minSaida - 15 + 60) % 60);
+        const saidaFim = formatarHora(Math.min(23, horaSaida + (minSaida + 15 >= 60 ? 1 : 0)),
+                                    (minSaida + 15) % 60);
+        
+        throw new Error(
+          `Fora do horário permitido. Registros de entrada: ${entradaInicio} até ${entradaFim}. 
+           Registros de saída: ${saidaInicio} até ${saidaFim}.`
+        );
+      }
+
+      // Armazenar o tipo de registro para uso posterior nas mensagens de feedback
+      const tipoRegistroAtual = tipoRegistro;
+
+      // 4. Verificar se o usuário já registrou este tipo de ponto hoje
+      const hoje = dataAtual.toISOString().split('T')[0];
+      
+      // Modificar para incluir o tipo de registro na verificação
       const verificaRegistroResponse = await fetch(
-        `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}`,
+        `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=${tipoRegistro}`,
         {
           method: "GET",
           headers: {
@@ -732,9 +814,10 @@ function RegistroPonto() {
       if (verificaRegistroResponse.ok) {
         const registroExistente = await verificaRegistroResponse.json();
         
+        // Verificar se já existe um registro do mesmo tipo hoje
         if (registroExistente && registroExistente.jaRegistrou) {
           setUsuarioReconhecido(usuarioReconhecido.nome);
-          setErro(`${usuarioReconhecido.nome} já registrou seu ponto hoje.`);
+          setErro(`${usuarioReconhecido.nome} já registrou seu ponto de ${tipoRegistro === "entrada" ? "entrada" : "saída"} hoje.`);
           setSucesso(false);
           setModoQuiosque("feedback");
           return;
@@ -742,15 +825,14 @@ function RegistroPonto() {
       }
 
       // 5. Registrar ponto para o usuário reconhecido
-      console.log("Registrando ponto para:", usuarioReconhecido.nome);
-      const dataAtual = serverTime ? new Date(serverTime) : new Date();
+      console.log(`Registrando ponto de ${tipoRegistro} para:`, usuarioReconhecido.nome);
       const dataFormatada = dataAtual.toISOString();
 
       const dadosRegistro = {
         nome: usuarioReconhecido.nome,
         usuario_id: usuarioReconhecidoId,
         data: dataFormatada,
-        tipo_registro: "entrada", 
+        tipo_registro: tipoRegistro, 
       };
 
       console.log("Enviando dados para registro:", dadosRegistro);
@@ -781,6 +863,8 @@ function RegistroPonto() {
       const resultado = await resposta.json();
       console.log("Registro concluído com sucesso:", resultado);
       
+      // Armazenar o tipo de registro para uso na mensagem de feedback
+      setTipoRegistroAtual(tipoRegistro);
       setSucesso(true);
       setUsuarioReconhecido(usuarioReconhecido.nome);
       setModoQuiosque("feedback");
@@ -909,20 +993,19 @@ function RegistroPonto() {
         {/* Status e informações */}
         <div className="status-overlay">
           {modoQuiosque === "feedback" ? (
-            // Resultados do reconhecimento facial
             <>
               {sucesso ? (
                 <>
                   <div className="feedback-user">{usuarioReconhecido}</div>
                   <div className="feedback-message success">
-                    <FaCheck className="sucesso-icon" /> Ponto registrado com sucesso!
+                    <FaCheck className="sucesso-icon" /> Ponto de {tipoRegistroAtual === 'entrada' ? 'entrada' : 'saída'} registrado com sucesso!
                   </div>
                 </>
-              ) : erro && erro.includes("já registrou seu ponto hoje") ? (
+              ) : erro && (erro.includes("já registrou seu ponto de entrada") || erro.includes("já registrou seu ponto de saída")) ? (
                 <>
                   <div className="feedback-user">{usuarioReconhecido}</div>
                   <div className="feedback-message warning">
-                    Você já registrou seu ponto hoje. Retorne amanhã.
+                    {erro}
                   </div>
                 </>
               ) : (
@@ -935,7 +1018,6 @@ function RegistroPonto() {
               )}
             </>
           ) : (
-            // Status de detecção/processamento
             <p className="status-text">
               {modoQuiosque === "detectando" && "Posicione seu rosto no centro para registrar ponto"}
               {modoQuiosque === "standby" && "Aproxime-se para ativar o sistema"}
