@@ -30,33 +30,47 @@ function Admin() {
 
     const fetchUsers = async () => {
         try {
-            const token = localStorage.getItem('token');
-            
-            if (!token) {
-                navigate('/');
-                return;
-            }
-
-            const response = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/todos', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache'
-                }
-            });
+            // Usar o endpoint público que já funciona
+            const response = await fetch('https://faceponto-banco-dados-production.up.railway.app/public/usuarios/completos');
 
             if (!response.ok) {
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    navigate('/');
-                    return;
-                }
                 throw new Error('Falha ao carregar funcionários');
             }
 
-            const data = await response.json();
-            setUsers(data);
-            setFilteredUsers(data);
+            const usersBasicInfo = await response.json();
+            
+            // Transformar os dados básicos para o formato que seu componente espera
+            const formattedUsers = await Promise.all(usersBasicInfo.map(async user => {
+                // Para cada usuário básico, buscar detalhes adicionais
+                try {
+                    const detailsResponse = await fetch(
+                        `https://faceponto-banco-dados-production.up.railway.app/public/usuarios/${user.id}/horario`
+                    );
+                    
+                    const horarioTrabalho = detailsResponse.ok ? await detailsResponse.json() : null;
+                    
+                    return {
+                        _id: user.id,
+                        nome: user.nome,
+                        email: `${user.nome.toLowerCase().replace(/\s/g, '.')}@faceponto.com`,
+                        perfil: user.perfil, // Adicionar o campo de perfil
+                        ativo: true,
+                        horarioTrabalho
+                    };
+                } catch (error) {
+                    console.warn(`Erro ao buscar detalhes do usuário ${user.nome}:`, error);
+                    return {
+                        _id: user.id,
+                        nome: user.nome,
+                        email: `${user.nome.toLowerCase().replace(/\s/g, '.')}@faceponto.com`,
+                        perfil: user.perfil, // Adicionar o campo de perfil
+                        ativo: true
+                    };
+                }
+            }));
+            
+            setUsers(formattedUsers);
+            setFilteredUsers(formattedUsers);
         } catch (error) {
             console.error("Erro ao buscar usuários:", error);
             setError(error.message);

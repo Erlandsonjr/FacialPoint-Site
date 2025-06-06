@@ -11,6 +11,7 @@ import Home from './components/Home/home.jsx';
 import Perfil from './components/Perfil/Perfil.jsx';
 import Admin from './components/AdminDash/admin.jsx';
 import HomePage from './components/Home/HomePage.jsx';
+import UserDetails from './components/AdminDash/UserDetails.jsx';
 
 const router = createBrowserRouter([
   {
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: "admin/dashboard",
         element: <Admin />,
+      },
+      {
+        path: "admin/funcionario/:id",
+        element: <UserDetails />,
       }
     ]
   },

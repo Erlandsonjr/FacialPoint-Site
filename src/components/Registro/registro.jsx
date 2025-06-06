@@ -44,9 +44,9 @@ function RegistroPonto() {
         await fetchServerTime();
         await iniciarCamera();
         setModoQuiosque("detectando");
-        
+
         // Adicionar o manipulador de visibilidade
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
       } catch (error) {
         setErro(
           "Erro ao inicializar o sistema. Por favor, recarregue a página."
@@ -62,34 +62,43 @@ function RegistroPonto() {
       pararCamera();
       limparTodosTimers();
       // Remover event listener de visibilidade
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
   // Adicione esta nova função que é chamada quando a visibilidade muda
   const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      console.log('Guia voltou ao foco, reiniciando câmera e detecção');
-      
+    if (document.visibilityState === "visible") {
+      console.log("Guia voltou ao foco, reiniciando câmera e detecção");
+
       // Verificar se o vídeo está pausado e retomar
-      if (videoRef.current && videoRef.current.paused && videoRef.current.srcObject) {
-        videoRef.current.play().catch(err => {
-          console.log('Erro ao retomar vídeo:', err);
-          // Se falhar ao retomar o vídeo, tente reiniciar a câmera completamente
-          setTimeout(() => {
-            pararCamera();
-            iniciarCamera().then(() => {
-              // Reiniciar detecção facial após reiniciar a câmera
-              if (modoQuiosque === "detectando" || modoQuiosque === "standby") {
-                iniciarDeteccaoFacial();
-              }
-            });
-          }, 300);
-        });
+      if (
+        videoRef.current &&
+        videoRef.current.paused &&
+        videoRef.current.srcObject
+      ) {
+        videoRef.current
+          .play()
+          .catch((err) => {
+            console.log("Erro ao retomar vídeo:", err);
+            // Se falhar ao retomar o vídeo, tente reiniciar a câmera completamente
+            setTimeout(() => {
+              pararCamera();
+              iniciarCamera().then(() => {
+                // Reiniciar detecção facial após reiniciar a câmera
+                if (modoQuiosque === "detectando" || modoQuiosque === "standby") {
+                  iniciarDeteccaoFacial();
+                }
+              });
+            }, 300);
+          });
       }
-      
+
       // Reiniciar a detecção se estiver no modo apropriado
-      if ((modoQuiosque === "detectando" || modoQuiosque === "standby") && !detectionRef.current) {
+      if (
+        (modoQuiosque === "detectando" || modoQuiosque === "standby") &&
+        !detectionRef.current
+      ) {
         iniciarDeteccaoFacial();
       }
     }
@@ -339,7 +348,7 @@ function RegistroPonto() {
     }
 
     // Se o stream estiver inativo, tente reiniciar a câmera
-    if (!stream || stream.getTracks().some(track => !track.enabled || track.readyState !== 'live')) {
+    if (!stream || stream.getTracks().some((track) => !track.enabled || track.readyState !== "live")) {
       console.log("Stream inativo, reiniciando câmera");
       iniciarCamera().then(() => {
         // Tentar novamente iniciar detecção após reiniciar câmera
@@ -497,48 +506,12 @@ function RegistroPonto() {
     }
   };
 
-  const getKioskToken = async () => {
-    try {
-      // Verificar se já temos um token de quiosque no localStorage
-      let kioskToken = localStorage.getItem('kioskToken');
-      
-      // Se não tiver token ou estiver perto de expirar, obter novo
-      if (!kioskToken) {
-        const response = await fetch(
-          "https://faceponto-banco-dados-production.up.railway.app/auth/kiosk",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              kioskSecret: "chave_secreta_do_quiosque_definida_no_ambiente" // Idealmente, isso viria do .env local
-            }),
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          kioskToken = data.token;
-          localStorage.setItem('kioskToken', kioskToken);
-        } else {
-          throw new Error("Falha na autenticação do quiosque");
-        }
-      }
-      
-      return kioskToken;
-    } catch (error) {
-      console.error("Erro ao obter token do quiosque:", error);
-      setErro("Erro de autenticação do quiosque. Contate o administrador.");
-      return null;
-    }
-  };
-
+  // Modifique a função processarRegistro para usar o endpoint público em vez de tentar autenticação
   const processarRegistro = async () => {
     try {
       setErro("");
       setCarregando(true);
-      
+
       // Validar foto
       if (!foto) {
         setErro("Erro: Foto não capturada.");
@@ -564,10 +537,10 @@ function RegistroPonto() {
         throw new Error(`Erro ao obter lista de usuários (${usuariosResponse.status})`);
       }
 
-      const usuariosData = await usuariosResponse.json();
-      console.log(`${usuariosData.length} usuários encontrados.`);
+      const usuariosData1 = await usuariosResponse.json();
+      console.log(`${usuariosData1.length} usuários encontrados.`);
 
-      if (!usuariosData || usuariosData.length === 0) {
+      if (!usuariosData1 || usuariosData1.length === 0) {
         throw new Error("Nenhum usuário cadastrado no sistema.");
       }
 
@@ -575,7 +548,7 @@ function RegistroPonto() {
       const todasCodificacoes = [];
       const usuariosMap = {};
       
-      usuariosData.forEach(usuario => {
+      usuariosData1.forEach(usuario => {
         if (usuario.foto) {
           try {
             let codificacao;
@@ -718,89 +691,140 @@ function RegistroPonto() {
         throw new Error("Usuário correspondente não encontrado no sistema.");
       }
 
-      // Obtém os dados completos do usuário para verificar os horários
-      const usuarioResponse = await fetch(
-        `https://faceponto-banco-dados-production.up.railway.app/usuarios/${usuarioReconhecidoId}`,
+      // Obter dados completos do usuário reconhecido
+      console.log("Obtendo dados completos do usuário reconhecido...");
+      setUsuarioReconhecido(usuarioReconhecido.nome);
+
+      // Usar o novo endpoint público para obter o horário de trabalho
+      console.log("Obtendo horário de trabalho usando novo endpoint...");
+      const horarioResponse = await fetch(
+        `https://faceponto-banco-dados-production.up.railway.app/public/usuarios/${usuarioReconhecidoId}/horario`,
         {
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         }
       );
 
-      if (!usuarioResponse.ok) {
-        throw new Error("Erro ao obter dados do usuário");
+      if (!horarioResponse.ok) {
+        // Tentar extrair mensagem de erro da API
+        try {
+          const errorData = await horarioResponse.json();
+          throw new Error(errorData.erro || `Não foi possível obter o horário de trabalho (${horarioResponse.status})`);
+        } catch (e) {
+          throw new Error(`Não foi possível obter o horário de trabalho (${horarioResponse.status})`);
+        }
       }
 
-      const usuarioData = await usuarioResponse.json();
-      
-      // Obter horários de entrada e saída da estrutura correta
-      let horarioEntrada = "08:00";
-      let horarioSaida = "17:00";
-      
-      // Verificar a estrutura correta dos horários no objeto usuário
-      if (usuarioData.horarioTrabalho && usuarioData.horarioTrabalho.entrada && usuarioData.horarioTrabalho.saida) {
-        // Formato esperado pelo modelo mongoose
-        horarioEntrada = usuarioData.horarioTrabalho.entrada;
-        horarioSaida = usuarioData.horarioTrabalho.saida;
-      } else if (usuarioData.horario_entrada && usuarioData.horario_saida) {
-        // Formato alternativo
-        horarioEntrada = usuarioData.horario_entrada;
-        horarioSaida = usuarioData.horario_saida;
-      }
+      const horarioTrabalho = await horarioResponse.json();
+      console.log("Horário de trabalho obtido com sucesso:", horarioTrabalho);
 
-      // Verificar qual tipo de registro baseado no horário atual
+      // Verificar qual dia da semana é hoje
       const dataAtual = serverTime ? new Date(serverTime) : new Date();
+      const diasSemana = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+      const diaSemanaAtual = diasSemana[dataAtual.getDay()];
+      
+      console.log("Dia da semana atual:", diaSemanaAtual);
+
+      // Verificar se o usuário tem horário definido para hoje
+      if (!horarioTrabalho || 
+          !horarioTrabalho[diaSemanaAtual] || 
+          !horarioTrabalho[diaSemanaAtual].entrada || 
+          !horarioTrabalho[diaSemanaAtual].saida) {
+        throw new Error(`Você não possui horário de trabalho definido para ${diaSemanaAtual}.`);
+      }
+      
+      const horarioEntrada = horarioTrabalho[diaSemanaAtual].entrada;
+      const horarioSaida = horarioTrabalho[diaSemanaAtual].saida;
+      
+      // Converter horários para minutos desde 00:00
       const horaAtual = dataAtual.getHours();
       const minutosAtual = dataAtual.getMinutes();
       const totalMinutosAtual = horaAtual * 60 + minutosAtual;
-
-      // Converter horários de entrada/saída para minutos desde 00:00
+      
       const [horaEntrada, minEntrada] = horarioEntrada.split(':').map(Number);
       const [horaSaida, minSaida] = horarioSaida.split(':').map(Number);
       
       const totalMinutosEntrada = horaEntrada * 60 + minEntrada;
       const totalMinutosSaida = horaSaida * 60 + minSaida;
       
-      // Define a janela de tolerância (15 minutos antes e depois)
-      const janelaToleranciaMins = 15;
+      // Janela de tolerância para entrada: 15 minutos antes até 15 minutos depois
+      const entradaInicio = totalMinutosEntrada - 15;
+      const entradaFim = totalMinutosEntrada + 15;
       
-      // Determinar o tipo de registro baseado na proximidade dos horários
+      // Janela de tolerância para saída: 15 minutos antes até o final do dia
+      const saidaInicio = totalMinutosSaida - 15;
+      const saidaFim = 24 * 60; // Final do dia (24:00)
+      
+      // Verificar em qual janela de tempo o usuário está
       let tipoRegistro = null;
       
-      if (Math.abs(totalMinutosAtual - totalMinutosEntrada) <= janelaToleranciaMins) {
+      // Formatação de horário para mensagens
+      const formatarHora = (minutos) => {
+        const h = Math.floor(minutos / 60);
+        const m = minutos % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      };
+      
+      // Se está na janela de entrada
+      if (totalMinutosAtual >= entradaInicio && totalMinutosAtual <= entradaFim) {
         tipoRegistro = "entrada";
-      } else if (Math.abs(totalMinutosAtual - totalMinutosSaida) <= janelaToleranciaMins) {
+      } 
+      // Se está na janela de saída
+      else if (totalMinutosAtual >= saidaInicio && totalMinutosAtual <= saidaFim) {
         tipoRegistro = "saida";
-      } else {
-        // Fora da janela permitida - mensagem mais amigável com indicação dos horários permitidos
-        const formatarHora = (horas, mins) => `${String(horas).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+      } 
+      else {
+
+        // Definir o nome do usuário antes de tratar o erro
+        setUsuarioReconhecido(usuarioReconhecido.nome);
         
-        // Calcular as janelas permitidas
-        const entradaInicio = formatarHora(Math.max(0, horaEntrada - (minEntrada > 15 ? 1 : 0)), 
-                                         (minEntrada - 15 + 60) % 60);
-        const entradaFim = formatarHora(Math.min(23, horaEntrada + (minEntrada + 15 >= 60 ? 1 : 0)),
-                                      (minEntrada + 15) % 60);
-                                      
-        const saidaInicio = formatarHora(Math.max(0, horaSaida - (minSaida > 15 ? 1 : 0)),
-                                       (minSaida - 15 + 60) % 60);
-        const saidaFim = formatarHora(Math.min(23, horaSaida + (minSaida + 15 >= 60 ? 1 : 0)),
-                                    (minSaida + 15) % 60);
+        // Verificar se o usuário já registrou entrada hoje quando já passou do horário de entrada
+        let msgEntradaRegistrada = "";
         
+        if (totalMinutosAtual > entradaFim && totalMinutosAtual < saidaInicio) {
+          // Já passou do horário de entrada mas ainda não chegou no de saída
+          // Verificar se já registrou entrada hoje
+          const hoje = dataAtual.toISOString().split('T')[0];
+          
+          try {
+            const verificaEntradaResponse = await fetch(
+              `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=entrada`,
+              {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
+              }
+            );
+            
+            if (verificaEntradaResponse.ok) {
+              const registroEntrada = await verificaEntradaResponse.json();
+              
+              if (registroEntrada && registroEntrada.jaRegistrou) {
+                // Mensagem simplificada quando já registrou entrada
+                throw new Error(`Fora do horário permitido. Seu ponto de entrada já foi registrado hoje. Você poderá registrar a saída a partir de ${formatarHora(saidaInicio)}.`);
+              } else {
+                throw new Error(`Fora do horário permitido. Você não registrou o ponto de entrada hoje e já passou do horário permitido.`);
+              }
+            }
+          } catch (e) {
+            if (e.message.includes("Fora do horário permitido")) {
+              throw e; // Propaga o erro já formatado
+            }
+            console.error("Erro ao verificar registro de entrada:", e);
+            // Continua para a mensagem padrão abaixo
+          }
+        }
+
+        // Mensagem padrão para outros casos fora do horário
         throw new Error(
-          `Fora do horário permitido. Registros de entrada: ${entradaInicio} até ${entradaFim}. 
-           Registros de saída: ${saidaInicio} até ${saidaFim}.`
+          `Fora do horário permitido.\n\nEntrada: ${formatarHora(entradaInicio)} até ${formatarHora(entradaFim)}\nSaída: ${formatarHora(saidaInicio)} até o final do dia.`
         );
       }
-
-      // Armazenar o tipo de registro para uso posterior nas mensagens de feedback
-      const tipoRegistroAtual = tipoRegistro;
-
-      // 4. Verificar se o usuário já registrou este tipo de ponto hoje
+      
+      // Verificar se o usuário já registrou este tipo de ponto hoje
       const hoje = dataAtual.toISOString().split('T')[0];
       
-      // Modificar para incluir o tipo de registro na verificação
       const verificaRegistroResponse = await fetch(
         `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=${tipoRegistro}`,
         {
@@ -814,19 +838,34 @@ function RegistroPonto() {
       if (verificaRegistroResponse.ok) {
         const registroExistente = await verificaRegistroResponse.json();
         
-        // Verificar se já existe um registro do mesmo tipo hoje
         if (registroExistente && registroExistente.jaRegistrou) {
           setUsuarioReconhecido(usuarioReconhecido.nome);
-          setErro(`${usuarioReconhecido.nome} já registrou seu ponto de ${tipoRegistro === "entrada" ? "entrada" : "saída"} hoje.`);
+          if (tipoRegistro === "entrada") {
+            setErro(`Você já registrou seu ponto hoje. Você pode registrar sua saída a partir de ${formatarHora(saidaInicio)}.`);
+            // Adicionar uma flag para identificar este tipo específico de erro
+            sessionStorage.setItem('errorType', 'saida-pendente');
+          } else {
+            setErro(`Você já registrou seu ponto de saída hoje.`);
+            sessionStorage.removeItem('errorType');
+          }
           setSucesso(false);
           setModoQuiosque("feedback");
           return;
         }
       }
 
-      // 5. Registrar ponto para o usuário reconhecido
+      // Registrar ponto para o usuário reconhecido
       console.log(`Registrando ponto de ${tipoRegistro} para:`, usuarioReconhecido.nome);
-      const dataFormatada = dataAtual.toISOString();
+      const dataFormatada = new Date(
+        dataAtual.getFullYear(),
+        dataAtual.getMonth(),
+        dataAtual.getDate(),
+        dataAtual.getHours(),
+        dataAtual.getMinutes(),
+        dataAtual.getSeconds()
+      ).toISOString();  // REMOVER o .replace('Z', '-03:00')
+
+      console.log("Data formatada para envio:", dataFormatada);
 
       const dadosRegistro = {
         nome: usuarioReconhecido.nome,
@@ -868,6 +907,7 @@ function RegistroPonto() {
       setSucesso(true);
       setUsuarioReconhecido(usuarioReconhecido.nome);
       setModoQuiosque("feedback");
+
     } catch (error) {
       console.error("Erro no processo de registro:", error);
       setErro(error.message || "Erro ao registrar ponto. Tente novamente.");
@@ -875,6 +915,49 @@ function RegistroPonto() {
       setModoQuiosque("feedback");
     } finally {
       setCarregando(false);
+    }
+  };
+
+  // Função para obter ou renovar o token de quiosque
+  const getKioskToken = async () => {
+    try {
+      console.log("Obtendo token de quiosque...");
+      
+      // Forçar solicitação de novo token limpando o armazenamento
+      localStorage.removeItem('kioskToken');
+      
+      const response = await fetch(
+        "https://faceponto-banco-dados-production.up.railway.app/auth/kiosk",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            kioskSecret: "FacePonto2025"
+          }),
+        }
+      );
+      
+      if (!response.ok) {
+        const status = response.status;
+        console.error(`Falha na autenticação do quiosque: ${status}`);
+        
+        // Tentar obter detalhes do erro
+        try {
+          const errorData = await response.json();
+          console.error("Detalhes do erro:", errorData);
+        } catch (e) {}
+        
+        return null;
+      }
+      
+      const data = await response.json();
+      console.log("Token de quiosque obtido com sucesso");
+      return data.token;
+    } catch (error) {
+      console.error("Erro ao obter token do quiosque:", error);
+      return null;
     }
   };
 
@@ -1001,16 +1084,26 @@ function RegistroPonto() {
                     <FaCheck className="sucesso-icon" /> Ponto de {tipoRegistroAtual === 'entrada' ? 'entrada' : 'saída'} registrado com sucesso!
                   </div>
                 </>
-              ) : erro && (erro.includes("já registrou seu ponto de entrada") || erro.includes("já registrou seu ponto de saída")) ? (
+              ) : erro && (erro.includes("já registrou seu ponto de") || erro.includes("Fora do horário permitido")) ? (
                 <>
                   <div className="feedback-user">{usuarioReconhecido}</div>
-                  <div className="feedback-message warning">
+                  <div
+                    className={
+                      erro && erro.includes("Você já registrou seu ponto hoje. Você pode registrar sua saída")
+                        ? "feedback-message warning"
+                        : erro && erro.includes("Fora do horário permitido")
+                        ? "feedback-message warning"
+                        : erro && erro.includes("já registrou seu ponto de")
+                        ? "feedback-message warning"
+                        : "feedback-message error"
+                    }
+                  >
                     {erro}
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="feedback-user">Não reconhecido</div>
+                  <div className="feedback-user">{usuarioReconhecido || "Não reconhecido"}</div>
                   <div className="feedback-message error">
                     {erro}
                   </div>

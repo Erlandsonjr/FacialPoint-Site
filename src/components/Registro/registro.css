@@ -1583,3 +1583,18 @@ html, body {
     font-size: 0.9rem !important;
   }
 }
+
+.feedback-message.saida-ja-registrada {
+  background: #fff7e6 !important;
+  color: #d97706 !important;
+  border-left: 5px solid #f59e42 !important;
+}
+
+.feedback-message.saida-ja-registrada,
+.feedback-message.saida-ja-registrada.error,
+.feedback-message.error.saida-ja-registrada {
+  background: #fff7e6 !important;
+  color: #d97706 !important;
+  border-left: 5px solid #f59e42 !important;
+  box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3) !important;
+}
