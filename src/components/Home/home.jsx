@@ -1,26 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaRegClock, FaSignOutAlt, FaChartBar } from 'react-icons/fa';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, LinearScale, BarElement, CategoryScale, Tooltip, Legend, Title } from 'chart.js';
+import { FaUserCircle, FaRegClock, FaSignOutAlt, FaChartBar, FaCalendarAlt, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import { 
+  Chart as ChartJS, 
+  LinearScale, 
+  BarElement, 
+  CategoryScale, 
+  Tooltip, 
+  Legend, 
+  Title, 
+  ArcElement, 
+  PointElement,
+  LineElement
+} from 'chart.js';
 import './home.css';
 
-ChartJS.register(LinearScale, BarElement, CategoryScale, Tooltip, Legend, Title);
+// Registrar todos os elementos necessários do Chart.js
+ChartJS.register(
+  LinearScale, 
+  BarElement, 
+  CategoryScale, 
+  Tooltip, 
+  Legend, 
+  Title, 
+  ArcElement, 
+  PointElement,
+  LineElement
+);
 
 function Home() {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [attendanceData, setAttendanceData] = useState([]);
-    const [chartLabels, setChartLabels] = useState([]);
     const [chartKey, setChartKey] = useState(0);
     const [currentServerTime, setCurrentServerTime] = useState(null);
+    const [horarioTrabalho, setHorarioTrabalho] = useState(null);
+    const [currentDayStatus, setCurrentDayStatus] = useState({
+        diaSemana: '',
+        entrada: null,
+        saida: null
+    });
+    const [registrosDia, setRegistrosDia] = useState({
+        entrada: null,
+        saida: null
+    });
+    
     const navigate = useNavigate();
-
-    // Adicione uma ref para controlar se os dados já foram carregados
     const userDataFetched = React.useRef(false);
 
-    const userDisplayName = React.useMemo(() => {
+    const userDisplayName = useMemo(() => {
         if (!userData) return 'Usuário';
         if (userData.nome) return userData.nome;
         
@@ -28,18 +58,59 @@ function Home() {
         if (storedName) return storedName;
         
         return 'Usuário';
-    }, [userData]); // Recalcula apenas quando userData mudar
+    }, [userData]);
+
+    // Determinar status atual (presente/ausente/fora de horário)
+    const currentStatus = useMemo(() => {
+        if (!currentServerTime || !horarioTrabalho || !currentDayStatus.diaSemana) {
+            return 'indeterminado';
+        }
+
+        const agora = currentServerTime;
+        const horaAtual = agora.getHours() + (agora.getMinutes() / 60);
+        
+        // NOVA LÓGICA: Verificar se o dia atual tem horário de trabalho configurado
+        const temHorarioHoje = currentDayStatus.entrada && currentDayStatus.saida && 
+                              currentDayStatus.entrada !== "" && currentDayStatus.saida !== "";
+        
+        // Se não tem horário configurado para hoje, é dia de folga
+        if (!temHorarioHoje) {
+            return 'dia-folga';
+        }
+        
+        // Converter horário de trabalho para números
+        const [entradaHora, entradaMinuto] = currentDayStatus.entrada.split(':').map(Number);
+        const [saidaHora, saidaMinuto] = currentDayStatus.saida.split(':').map(Number);
+        
+        const horaEntrada = entradaHora + (entradaMinuto / 60);
+        const horaSaida = saidaHora + (saidaMinuto / 60);
+        
+        // Verificar se está dentro do horário de trabalho
+        if (horaAtual >= horaEntrada && horaAtual <= horaSaida) {
+            // Verificar se registrou entrada hoje
+            if (registrosDia.entrada) {
+                if (registrosDia.saida) {
+                    return 'finalizado'; // Já registrou entrada e saída
+                }
+                return 'presente'; // Registrou entrada mas não saída
+            }
+            return 'ausente'; // Não registrou entrada mas está em horário
+        } else if (horaAtual < horaEntrada) {
+            return 'antes-expediente'; // Ainda não começou o expediente
+        } else {
+            return 'apos-expediente'; // Já passou do horário de expediente
+        }
+    }, [currentServerTime, horarioTrabalho, currentDayStatus, registrosDia]);
 
     useEffect(() => {
         const fetchUserData = async () => {
-            // Evita requisições repetidas
             if (userDataFetched.current) {
-                console.log("Dados do usuário já foram carregados, ignorando nova requisição");
+                console.log("Dados do usuário já foram carregados");
                 return;
             }
 
             try {
-                // Obter horário oficial de Brasília do próprio backend
+                // Obter horário oficial do backend
                 const timeResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/horario-brasilia');
                 
                 if (!timeResponse.ok) {
@@ -47,87 +118,30 @@ function Home() {
                 }
                 
                 const timeData = await timeResponse.json();
-                console.log("Resposta do servidor (horário):", timeData);
-
-                // Verificação mais robusta do formato da resposta
                 let serverTime = null;
                 
-                // Depuração detalhada dos campos
-                console.log("Campos disponíveis:", {
-                    hasComponents: timeData && typeof timeData.components !== 'undefined',
-                    components: timeData?.components,
-                    hasIsoString: timeData && typeof timeData.isoString !== 'undefined',
-                    isoString: timeData?.isoString,
-                    hasTimestamp: timeData && typeof timeData.timestamp !== 'undefined',
-                    timestamp: timeData?.timestamp,
-                });
-
-                // Prioridade 1: Usar components se disponível e válido
-                if (timeData && timeData.components && 
-                    typeof timeData.components.year === 'number' && 
-                    typeof timeData.components.month === 'number') {
-                    
+                // Extrair o horário dos dados recebidos
+                if (timeData && timeData.components) {
                     const components = timeData.components;
                     serverTime = new Date(
                         components.year,
-                        components.month - 1, // Converter mês baseado em 1 para baseado em 0
+                        components.month - 1,
                         components.day,
                         components.hour,
                         components.minute,
                         components.second
                     );
-                    console.log('Horário criado a partir de components:', serverTime);
-                }
-                // Prioridade 2: Usar isoString se disponível e válido
-                else if (timeData && timeData.isoString && typeof timeData.isoString === 'string') {
+                } else if (timeData && timeData.isoString) {
                     serverTime = new Date(timeData.isoString);
-                    console.log('Horário criado a partir de isoString:', serverTime);
-                }
-                // Prioridade 3: Usar timestamp se disponível e válido
-                else if (timeData && timeData.timestamp && typeof timeData.timestamp === 'number') {
+                } else if (timeData && timeData.timestamp) {
                     serverTime = new Date(timeData.timestamp);
-                    console.log('Horário criado a partir de timestamp:', serverTime);
-                }
-                // Prioridade 4: Se não encontrar formato conhecido mas tiver dados, use como fallback
-                else if (timeData) {
-                    console.warn('Formato não reconhecido, tentando usar qualquer dado disponível:', timeData);
-                    
-                    // Tentar usar a resposta diretamente
-                    if (typeof timeData === 'string') {
-                        serverTime = new Date(timeData);
-                    }
-                    // Tentar como se fosse um objeto Date serializado
-                    else if (timeData.toISOString || timeData.getTime) {
-                        serverTime = new Date(timeData.toISOString ? timeData.toISOString() : timeData.getTime());
-                    } 
-                    // Último recurso: usar data atual
-                    else {
-                        console.warn('Usando horário local como fallback');
-                        serverTime = new Date();
-                    }
-                }
-                else {
-                    throw new Error('Formato de resposta do servidor não reconhecido');
-                }
-
-                if (!serverTime || isNaN(serverTime.getTime())) {
-                    console.error("Data inválida criada:", serverTime);
-                    throw new Error("Não foi possível criar um objeto Date válido");
+                } else {
+                    serverTime = new Date();
                 }
 
                 setCurrentServerTime(serverTime);
-                console.log('Horário inicial obtido do servidor:', serverTime);
                 
-                // Continuar com o restante do código...
-            } catch (error) {
-                console.error('Erro crítico ao obter horário inicial:', error);
-                console.warn('Usando horário local como fallback de emergência');
-                setCurrentServerTime(new Date()); // Usar horário local como fallback de emergência
-                // Continue com a execução mesmo com erro para não bloquear completamente o usuário
-            }
-            
-            // Resto do código existente...
-            try {
+                // Obter dados do usuário
                 const token = localStorage.getItem('token');
                 
                 if (!token) {
@@ -135,12 +149,7 @@ function Home() {
                     return;
                 }
                 
-                const tokenParts = token.split('.');
-                const payload = JSON.parse(atob(tokenParts[1]));
-                console.log("Token payload:", payload);
-                
-                // Limite a uma única abordagem para obter dados do usuário
-                // (em vez de tentar múltiplos endpoints)
+                // Tentar obter informações do usuário
                 try {
                     const userResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/usuarios/me', {
                         headers: {
@@ -150,10 +159,33 @@ function Home() {
                     
                     if (userResponse.ok) {
                         const userData = await userResponse.json();
-                        console.log("Dados de usuário obtidos com sucesso:", userData);
+                        console.log("Dados de usuário obtidos:", userData);
                         setUserData(userData);
+                        
+                        // Configurar horário de trabalho do usuário
+                        if (userData.horarioTrabalho) {
+                            setHorarioTrabalho(userData.horarioTrabalho);
+                            
+                            // Determinar dia da semana atual
+                            const diasSemana = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+                            const diaSemanaAtual = diasSemana[serverTime.getDay()];
+                            
+                            // Verificar se há horário configurado para o dia atual
+                            const horarioDia = userData.horarioTrabalho[diaSemanaAtual];
+                            
+                            // Configurar horário do dia atual com verificação mais rigorosa
+                            setCurrentDayStatus({
+                                diaSemana: diaSemanaAtual,
+                                entrada: (horarioDia && horarioDia.entrada && horarioDia.entrada.trim() !== "") ? horarioDia.entrada : null,
+                                saida: (horarioDia && horarioDia.saida && horarioDia.saida.trim() !== "") ? horarioDia.saida : null
+                            });
+                            
+                            console.log(`Horário para ${diaSemanaAtual}:`, horarioDia);
+                        }
                     } else {
-                        console.warn("Erro ao obter dados do usuário. Usando informações do token.");
+                        console.warn("Erro ao obter dados do usuário.");
+                        const tokenParts = token.split('.');
+                        const payload = JSON.parse(atob(tokenParts[1]));
                         const defaultUser = {
                             email: payload.email,
                             _id: payload._id,
@@ -162,10 +194,11 @@ function Home() {
                         setUserData(defaultUser);
                     }
                     
-                    // Marcar que os dados foram carregados
                     userDataFetched.current = true;
                 } catch (error) {
                     console.error("Erro ao buscar dados de usuário:", error);
+                    const tokenParts = token.split('.');
+                    const payload = JSON.parse(atob(tokenParts[1]));
                     const defaultUser = {
                         email: payload.email,
                         _id: payload._id,
@@ -175,20 +208,18 @@ function Home() {
                     userDataFetched.current = true;
                 }
                 
-                // Adicione parâmetros para evitar cache
+                // Buscar registros de frequência
                 const timestamp = Date.now();
                 const attendanceResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/frequencias/minhas?nocache=${timestamp}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
+                        'Cache-Control': 'no-cache'
                     }
                 });
                 
                 if (!attendanceResponse.ok) {
                     if (attendanceResponse.status === 404) {
-                        console.log("Usuário sem registros de frequência ainda");
+                        console.log("Usuário sem registros de frequência");
                         processAttendanceData([]);
                         return;
                     }
@@ -203,9 +234,9 @@ function Home() {
                         const errorData = await attendanceResponse.json();
                         console.log("Erro detalhado:", errorData);
                         
-                        if (errorData.erro && errorData.erro.includes("não encontrado") || 
-                            errorData.erro && errorData.erro.includes("frequência")) {
-                            console.log("Usuário provavelmente não tem registros ainda");
+                        if (errorData.erro && (errorData.erro.includes("não encontrado") || 
+                            errorData.erro.includes("frequência"))) {
+                            console.log("Usuário sem registros ainda");
                             processAttendanceData([]);
                             return;
                         }
@@ -213,7 +244,7 @@ function Home() {
                         throw new Error(`Erro ao carregar frequências: ${errorData.erro}`);
                     } catch (jsonError) {
                         processAttendanceData([]);
-                        setError("Não foi possível carregar seu histórico de frequências. Registre seu primeiro ponto para começar.");
+                        setError("Não foi possível carregar seu histórico de frequências.");
                     }
                     return;
                 }
@@ -234,6 +265,7 @@ function Home() {
         fetchUserData();
     }, [navigate]);
     
+    // Atualizar o tamanho do gráfico quando a janela for redimensionada
     useEffect(() => {
         const handleResize = () => {
             setChartKey(prev => prev + 1);
@@ -245,6 +277,7 @@ function Home() {
         };
     }, []);
     
+    // Sincronização do relógio com o servidor
     useEffect(() => {
         let localTimer;
         let syncTimer;
@@ -253,7 +286,6 @@ function Home() {
         // Função para sincronizar com o servidor
         const syncWithServer = async () => {
             try {
-                // Adicionar parâmetro para evitar cache
                 const timeResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/horario-brasilia?t=${Date.now()}`);
                 
                 if (!timeResponse.ok) {
@@ -261,20 +293,9 @@ function Home() {
                 }
                 
                 const timeData = await timeResponse.json();
-                console.log("Atualização de horário recebida:", timeData);
-                
                 let serverTime = null;
                 
-                // Prioridade 1: Usar o formato antigo com horario
-                if (timeData && timeData.horario) {
-                    serverTime = new Date(timeData.horario);
-                    console.log('Horário sincronizado do servidor:', serverTime);
-                }
-                // Prioridade 2: Usar components se disponível
-                else if (timeData && timeData.components && 
-                    typeof timeData.components.year === 'number' && 
-                    typeof timeData.components.month === 'number') {
-                    
+                if (timeData && timeData.components) {
                     const components = timeData.components;
                     serverTime = new Date(
                         components.year,
@@ -284,207 +305,176 @@ function Home() {
                         components.minute,
                         components.second
                     );
-                    console.log('Horário criado a partir de components:', serverTime);
-                }
-                // Prioridade 3: Usar isoString se disponível
-                else if (timeData && timeData.isoString && typeof timeData.isoString === 'string') {
+                } else if (timeData && timeData.isoString) {
                     serverTime = new Date(timeData.isoString);
-                    console.log('Horário criado a partir de isoString:', serverTime);
-                }
-                // Prioridade 4: Usar timestamp se disponível
-                else if (timeData && timeData.timestamp && typeof timeData.timestamp === 'number') {
+                } else if (timeData && timeData.timestamp) {
                     serverTime = new Date(timeData.timestamp);
-                    console.log('Horário criado a partir de timestamp:', serverTime);
                 } else {
                     throw new Error('Formato de resposta do servidor não reconhecido');
                 }
                 
-                // Atualizar o horário local com o do servidor
                 localTime = serverTime;
                 setCurrentServerTime(serverTime);
             } catch (err) {
                 console.error('Erro ao atualizar horário do servidor:', err);
-                // Não mostra erro na interface para não sobrecarregar com mensagens
             }
         };
         
-        // Função para incrementar o horário localmente a cada segundo
+        // Função para incrementar o horário localmente
         const updateLocalTime = () => {
             if (localTime) {
-                // Incrementa o horário local em 1 segundo
                 localTime = new Date(localTime.getTime() + 1000);
                 setCurrentServerTime(new Date(localTime));
             }
         };
 
-        // Sincronizar com o servidor inicialmente
         syncWithServer();
         
-        // Configurar os dois timers:
-        // 1. Atualização local (a cada segundo)
         localTimer = setInterval(updateLocalTime, 1000);
-        
-        // 2. Sincronização com o servidor (a cada 30 segundos)
         syncTimer = setInterval(syncWithServer, 30000);
         
-        // Limpeza dos timers na desmontagem do componente
         return () => {
             clearInterval(localTimer);
             clearInterval(syncTimer);
         };
-    }, []); // Sem dependências para executar apenas na montagem
+    }, []);
     
-    // Modifique a função processAttendanceData para melhor compatibilidade com sua API
-    const processAttendanceData = async (data) => {
-        // Adicione logo no início da função processAttendanceData para verificar o registro mencionado:
-        const specificRecord = data.find(item => 
-            item.data && item.data.includes("2025-05-13") || 
-            item.horario && item.horario.includes("2025-05-13"));
-
-        if (specificRecord) {
-            console.log("✓ ENCONTRADO o registro de 13/05/2025:", specificRecord);
-        } else {
-            console.log("✗ NÃO ENCONTRADO registro de 13/05/2025 - verifique se ele está realmente na resposta da API");
-        }
-
-        // Imprimir os dados recebidos para diagnóstico
-        console.log("Dados de frequência brutos recebidos:", JSON.stringify(data, null, 2));
+    // Processar dados de frequência
+    const processAttendanceData = (data) => {
+        console.log("Processando dados de frequência:", data);
         
-        // Verificação se há dados
         if (!Array.isArray(data) || data.length === 0) {
             console.warn("Sem dados de frequência para processar");
             setAttendanceData([]);
-            setChartLabels([]);
             return;
         }
         
-        // Usar a data do servidor já obtida anteriormente
-        let today = currentServerTime;
+        // Usar a data do servidor já obtida
+        let today = currentServerTime || new Date();
         
-        if (!today) {
-            try {
-                // Código existente para obter horário...
-                today = new Date(); // Fallback
-            } catch (error) {
-                console.error('Falha ao obter horário:', error);
-                today = new Date();
-            }
-        }
+        // Calcular o início da semana atual (domingo)
+        const currentWeekDays = [];
+        const todayDayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, etc.
         
-        // Gerar array com os últimos 7 dias
-        const lastSevenDays = [];
-        for (let i = 6; i >= 0; i--) {
+        // Calcular quantos dias voltar para chegar ao domingo
+        const daysToSunday = todayDayOfWeek;
+        
+        // Criar array com os 7 dias da semana atual (domingo a sábado)
+        for (let i = 0; i < 7; i++) {
             const date = new Date(today);
-            date.setDate(today.getDate() - i);
+            date.setDate(today.getDate() - daysToSunday + i);
             
-            // Formatar apenas para display
+            // Formatação para display
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            lastSevenDays.push({
-                dateObj: new Date(date), // Guardar o objeto Date completo
-                formatted: formattedDate  // String formatada para display
+            
+            // Nome do dia da semana
+            const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const dayName = dayNames[date.getDay()];
+            
+            // Mapear para nomes do schema do banco
+            const diasSemanaSchema = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+            const diaSemanaSchema = diasSemanaSchema[date.getDay()];
+            
+            currentWeekDays.push({
+                dateObj: new Date(date),
+                formatted: formattedDate,
+                dayName: dayName,
+                fullDate: formatDateISO(date), // YYYY-MM-DD
+                diaSemanaSchema: diaSemanaSchema // Para consultar horarioTrabalho
             });
         }
         
-        console.log("Últimos 7 dias para processamento:", lastSevenDays.map(d => ({
-            formatted: d.formatted,
-            fullDate: d.dateObj.toISOString()
-        })));
+        console.log("Dias da semana atual:", currentWeekDays);
         
-        // Processar os dados para cada dia com uma lógica mais robusta
-        const processedData = lastSevenDays.map(dateInfo => {
-            // Para cada dia, vamos verificar se há registro correspondente
-            const dateToCheck = dateInfo.dateObj;
+        // Função auxiliar para garantir formato YYYY-MM-DD
+        function formatDateISO(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Estrutura para armazenar registros por dia
+        const registrosPorDia = {};
+        
+        // Processar todos os registros para agrupar por dia
+        data.forEach(registro => {
+            // Converter a data UTC para horário de Brasília
+            const dataRegistro = new Date(registro.data);
             
-            // Extrair apenas a data (sem considerar a hora)
-            const yearToCheck = dateToCheck.getFullYear();
-            const monthToCheck = dateToCheck.getMonth(); // 0-11
-            const dayToCheck = dateToCheck.getDate();
+            // Usar toLocaleString para obter a data local de Brasília
+            const dataLocalBrasilia = new Date(dataRegistro.toLocaleString('en-US', { 
+                timeZone: 'America/Sao_Paulo' 
+            }));
             
-            // Modifique a lógica de busca do registro para ser mais flexível:
-            const record = data.find(item => {
-                if (!item) return false;
-                
-                try {
-                    // Tentar todas as propriedades de data disponíveis
-                    let matches = false;
-                    
-                    // Verificar usando o campo data
-                    if (item.data) {
-                        const itemDate = new Date(item.data);
-                        
-                        // 1. Comparação direta de ano, mês, dia
-                        const directMatch = 
-                            itemDate.getUTCFullYear() === yearToCheck &&
-                            itemDate.getUTCMonth() === monthToCheck && 
-                            itemDate.getUTCDate() === dayToCheck;
-                            
-                        // 2. Comparação de string da data (ignore a hora)
-                        const itemDateStr = itemDate.toISOString().split('T')[0];
-                        const checkDateObj = new Date(yearToCheck, monthToCheck, dayToCheck);
-                        const checkDateStr = checkDateObj.toISOString().split('T')[0];
-                        
-                        const strMatch = itemDateStr === checkDateStr;
-                        
-                        if (directMatch || strMatch) {
-                            console.log(`CORRESPONDÊNCIA ENCONTRADA para ${dateInfo.formatted} via campo data`);
-                            matches = true;
-                        }
-                    }
-                    
-                    // Verificar usando o campo horario se ainda não encontrou
-                    if (!matches && item.horario) {
-                        const itemTime = new Date(item.horario);
-                        
-                        const timeMatch = 
-                            itemTime.getUTCFullYear() === yearToCheck &&
-                            itemTime.getUTCMonth() === monthToCheck && 
-                            itemTime.getUTCDate() === dayToCheck;
-                            
-                        if (timeMatch) {
-                            console.log(`CORRESPONDÊNCIA ENCONTRADA para ${dateInfo.formatted} via campo horario`);
-                            matches = true;
-                        }
-                    }
-                    
-                    return matches;
-                } catch (error) {
-                    console.error("Erro ao processar data:", error, item);
-                    return false;
-                }
-            });
+            // Formato YYYY-MM-DD para indexação usando a data local
+            const dataFormatada = formatDateISO(dataLocalBrasilia);
             
-            // Extrair a hora do registro encontrado
-            let hourValue = 0;
+            console.log(`Registro: ${registro.tipo_registro} - UTC: ${dataRegistro.toISOString()} - Local Brasília: ${dataLocalBrasilia.toISOString()} - Formatada: ${dataFormatada}`);
             
-            if (record) {
-                console.log(`Registro encontrado para ${dateInfo.formatted}:`, record);
-                
-                try {
-                    if (record.horario) {
-                        const recordTime = new Date(record.horario);
-                        hourValue = recordTime.getHours();
-                        console.log(`Hora extraída do registro: ${hourValue} (${record.horario})`);
-                    } else {
-                        console.log(`Registro sem campo horario, usando valor padrão`);
-                        hourValue = 12; // Valor padrão se não houver horário específico
-                    }
-                } catch (error) {
-                    console.error("Erro ao processar horário:", error, record);
-                    hourValue = 12; // Valor padrão em caso de erro
-                }
-            } else {
-                console.log(`Nenhum registro encontrado para ${dateInfo.formatted}`);
+            if (!registrosPorDia[dataFormatada]) {
+                registrosPorDia[dataFormatada] = {
+                    entradas: [],
+                    saidas: []
+                };
             }
+            
+            // Usar a data local de Brasília para cálculos de horário
+            if (registro.tipo_registro === 'entrada') {
+                registrosPorDia[dataFormatada].entradas.push(dataLocalBrasilia);
+            } else if (registro.tipo_registro === 'saida') {
+                registrosPorDia[dataFormatada].saidas.push(dataLocalBrasilia);
+            }
+        });
+        
+        console.log("Registros agrupados por dia:", registrosPorDia);
+        
+        // Verificar registros para o dia atual
+        const hoje = formatDateISO(today);
+        
+        if (registrosPorDia[hoje]) {
+            const registrosHoje = registrosPorDia[hoje];
+            setRegistrosDia({
+                entrada: registrosHoje.entradas.length > 0 ? registrosHoje.entradas[0] : null,
+                saida: registrosHoje.saidas.length > 0 ? registrosHoje.saidas[registrosHoje.saidas.length - 1] : null
+            });
+        } else {
+            setRegistrosDia({
+                entrada: null,
+                saida: null
+            });
+        }
+        
+        // Processar dados para os gráficos da semana atual
+        const processedData = currentWeekDays.map(dateInfo => {
+            const dateFmt = dateInfo.fullDate; // Usar formato YYYY-MM-DD
+            const dayRecords = registrosPorDia[dateFmt] || { entradas: [], saidas: [] };
+            
+            // Verificar se o usuário trabalha neste dia
+            const horarioDia = horarioTrabalho && horarioTrabalho[dateInfo.diaSemanaSchema];
+            const temHorarioHoje = horarioDia && horarioDia.entrada && horarioDia.saida && 
+                                  horarioDia.entrada.trim() !== "" && horarioDia.saida.trim() !== "";
+            
+            // Obter o primeiro horário de entrada e último de saída
+            const entradaHora = dayRecords.entradas.length > 0 
+                ? dayRecords.entradas[0].getHours() + (dayRecords.entradas[0].getMinutes() / 60)
+                : null;
+                
+            const saidaHora = dayRecords.saidas.length > 0 
+                ? dayRecords.saidas[dayRecords.saidas.length - 1].getHours() + (dayRecords.saidas[dayRecords.saidas.length - 1].getMinutes() / 60)
+                : null;
+            
+            console.log(`${dateInfo.dayName} ${dateInfo.formatted}: entrada=${entradaHora}, saida=${saidaHora}, trabalha=${temHorarioHoje}`);
             
             return {
-                x: dateInfo.formatted,
-                y: hourValue
+                date: `${dateInfo.dayName}\n${dateInfo.formatted}`, // Mostrar dia da semana + data
+                entrada: entradaHora,
+                saida: saidaHora,
+                isWorkDay: temHorarioHoje // NOVO: indica se é dia de trabalho
             };
         });
         
-        console.log("Dados processados para gráfico:", processedData);
-        
-        setChartLabels(lastSevenDays.map(d => d.formatted));
+        console.log("Dados processados para gráfico da semana atual:", processedData);
         setAttendanceData(processedData);
     };
     
@@ -493,73 +483,143 @@ function Home() {
         navigate('/');
     };
     
-    const hoursChartData = {
-        labels: chartLabels,
-        datasets: [{
-            label: "Horas de Registro",
-            data: attendanceData.map(item => item.y),
-            backgroundColor: 'rgba(245, 166, 35, 0.7)',
-            borderColor: '#ff7b00',
-            borderWidth: 1,
-        }]
+    // Dados para o gráfico de linha (entrada/saída)
+    const lineChartData = {
+        labels: attendanceData.map(item => item.date),
+        datasets: [
+            {
+                label: "Entrada",
+                data: attendanceData.map(item => item.entrada),
+                backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                borderColor: '#2ecc71',
+                borderWidth: 2,
+                pointBackgroundColor: '#2ecc71',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.2
+            },
+            {
+                label: "Saída",
+                data: attendanceData.map(item => item.saida),
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                borderColor: '#3498db',
+                borderWidth: 2,
+                pointBackgroundColor: '#3498db',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.2
+            }
+        ]
     };
     
-    const attendanceChartData = {
-        labels: ['Presente', 'Ausente'],
-        datasets: [{
-            label: "Status na Semana",
-            data: [
-                attendanceData.filter(item => item.y > 0).length,
-                attendanceData.filter(item => item.y === 0).length
-            ],
-            backgroundColor: [
-                'rgba(76, 175, 80, 0.7)',
-                'rgba(244, 67, 54, 0.7)'
-            ],
-            borderColor: [
-                '#4caf50',
-                '#f44336'
-            ],
-            borderWidth: 1,
-        }]
-    };
+    // Dados para o gráfico de rosca (presença) - apenas dias de trabalho
+    const pieChartData = useMemo(() => {
+        const diasTrabalho = attendanceData.filter(item => item.isWorkDay);
+        const diasPresentes = diasTrabalho.filter(item => item.entrada !== null);
+        const diasAusentes = diasTrabalho.filter(item => item.entrada === null);
+        
+        return {
+            labels: ['Presente', 'Ausente'],
+            datasets: [{
+                data: [
+                    diasPresentes.length,
+                    diasAusentes.length
+                ],
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.7)',
+                    'rgba(231, 76, 60, 0.7)'
+                ],
+                borderColor: [
+                    '#2ecc71',
+                    '#e74c3c'
+                ],
+                borderWidth: 1,
+            }]
+        };
+    }, [attendanceData]);
     
-    const chartOptions = {
+    // Opções para o gráfico de linha
+    const lineOptions = {
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: 2,
         plugins: {
             legend: {
-                display: false
+                position: 'top',
+                labels: {
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    padding: 20,
+                    font: {
+                        family: "'Inter', sans-serif",
+                        size: 12
+                    }
+                }
             },
             title: {
-                display: true,
-                text: 'Histórico de Registros',
-                color: 'white',
-                font: {
-                    size: window.innerWidth < 480 ? 14 : 16
-                },
-                padding: {
-                    top: 5,
-                    bottom: 15
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                titleColor: 'rgba(255, 255, 255, 0.95)',
+                bodyColor: 'rgba(255, 255, 255, 0.95)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 6,
+                displayColors: true,
+                boxPadding: 6,
+                usePointStyle: true,
+                callbacks: {
+                    title: function(tooltipItems) {
+                        return `${tooltipItems[0].label}`;
+                    },
+                    label: function(context) {
+                        const value = context.raw;
+                        if (value === null) return 'Não registrado';
+                        
+                        const hour = Math.floor(value);
+                        const minute = Math.floor((value - hour) * 60);
+                        
+                        // Se for exatamente 24h, mostrar como 24:00
+                        if (hour === 24) {
+                            return `${context.dataset.label}: 24:00`;
+                        }
+                        
+                        return `${context.dataset.label}: ${hour}:${minute.toString().padStart(2, '0')}`;
+                    }
                 }
-            }
-        },
-        layout: {
-            padding: {
-                left: 5,
-                right: 10,
-                top: 0,
-                bottom: 0
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
+                min: 0,   // MUDANÇA: Começando em 00:00 (meia-noite)
+                max: 24,  // Até 24h (meia-noite seguinte)
                 ticks: {
-                    color: 'white',
-                    padding: 5,
-                    maxTicksLimit: 6
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    padding: 8,
+                    maxTicksLimit: 13, // Aumentado para mostrar mais horários (0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24)
+                    stepSize: 2, // Incremento de 2 em 2 horas
+                    font: {
+                        family: "'Inter', sans-serif",
+                        size: 11
+                    },
+                    callback: (value) => {
+                        const hour = Math.floor(value);
+                        
+                        // Mostrar 24:00 para o valor 24
+                        if (hour === 24) {
+                            return '24:00';
+                        }
+                        
+                        return `${hour.toString().padStart(2, '0')}:00`;
+                    }
                 },
                 grid: {
                     color: 'rgba(255, 255, 255, 0.1)',
@@ -568,18 +628,23 @@ function Home() {
             },
             x: {
                 ticks: {
-                    color: 'white',
-                    maxRotation: window.innerWidth < 480 ? 45 : 0,
-                    autoSkip: true,
-                    maxTicksLimit: window.innerWidth < 480 ? 4 : 7
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    maxRotation: window.innerWidth < 768 ? 45 : 0, // Rotacionar em telas menores
+                    autoSkip: false, // Não pular labels para mostrar todos os dias
+                    font: {
+                        family: "'Inter', sans-serif",
+                        size: window.innerWidth < 480 ? 9 : 11 // Fonte menor em mobile
+                    }
                 },
                 grid: {
-                    display: false
+                    display: false,
+                    color: 'rgba(255, 255, 255, 0.05)'
                 }
             }
         }
     };
     
+    // Opções para o gráfico de rosca
     const pieOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -587,18 +652,53 @@ function Home() {
             legend: {
                 position: 'bottom',
                 labels: {
-                    color: 'white'
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    usePointStyle: true,
+                    padding: 15,
+                    font: {
+                        family: "'Inter', sans-serif",
+                        size: 12
+                    }
                 }
             },
             title: {
-                display: true,
-                text: 'Presença Semanal',
-                color: 'white',
-                font: {
-                    size: 16
-                }
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                titleColor: 'rgba(255, 255, 255, 0.95)',
+                bodyColor: 'rgba(255, 255, 255, 0.95)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 6
             }
-        }
+        },
+        cutout: '65%'
+    };
+
+    // Formato para exibição de horário
+    const formatTime = (date) => {
+        if (!date) return "Não registrado";
+        if (typeof date === 'string') return date;
+        return date.toLocaleTimeString('pt-BR', {
+            hour: '2-digit', 
+            minute: '2-digit'
+        });
+    };
+
+    // Formatação de dia da semana
+    const formatWeekday = (dia) => {
+        const dias = {
+            'domingo': 'Domingo',
+            'segunda': 'Segunda-feira',
+            'terca': 'Terça-feira',
+            'quarta': 'Quarta-feira',
+            'quinta': 'Quinta-feira',
+            'sexta': 'Sexta-feira',
+            'sabado': 'Sábado'
+        };
+        return dias[dia] || dia;
     };
 
     if (loading) return (
@@ -636,63 +736,190 @@ function Home() {
                 <div className="welcome-section">
                     <h1>Bem Vindo, <span className="user-name">{userDisplayName}!</span></h1>
                     <p className="date-info">
-                        Hoje é {(() => {
-                            // Usa o horário do servidor se disponível
-                            const dataReferencia = currentServerTime || new Date();
-                            const options = { 
+                        {currentServerTime ? (
+                            currentServerTime.toLocaleDateString('pt-BR', { 
                                 weekday: 'long', 
                                 year: 'numeric', 
                                 month: 'long', 
-                                day: 'numeric'
-                            };
-                            return dataReferencia.toLocaleDateString('pt-BR', options);
-                        })()}
+                                day: 'numeric' 
+                            })
+                        ) : (
+                            "Sincronizando horário..."
+                        )}
                     </p>
+                    <div className="current-time">
+                        {currentServerTime ? (
+                            currentServerTime.toLocaleTimeString('pt-BR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            })
+                        ) : (
+                            "00:00:00"
+                        )}
+                    </div>
                 </div>
                 
                 {error && <div className="error-message">{error}</div>}
 
-                {attendanceData.length > 0 && attendanceData.every(item => item.y === 0) && (
-                    <div className="info-message">
-                        <p>Você ainda não possui registros de frequência esta semana. Consulte seus dados históricos em Relatórios.</p>
+                {/* Nova seção: Status atual */}
+                <section className="status-card">
+                    <div className={`status-indicator ${currentStatus}`}>
+                        {currentStatus === 'presente' && (
+                            <>
+                                <FaCheckCircle className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Você está presente</h3>
+                                    <p>Entrada registrada às {formatTime(registrosDia.entrada)}</p>
+                                </div>
+                            </>
+                        )}
+                        {currentStatus === 'ausente' && (
+                            <>
+                                <FaTimesCircle className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Você está ausente</h3>
+                                    <p>Registre seu ponto de entrada</p>
+                                </div>
+                            </>
+                        )}
+                        {currentStatus === 'finalizado' && (
+                            <>
+                                <FaCheckCircle className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Expediente finalizado</h3>
+                                    <p>Saída registrada às {formatTime(registrosDia.saida)}</p>
+                                </div>
+                            </>
+                        )}
+                        {currentStatus === 'antes-expediente' && (
+                            <>
+                                <FaRegClock className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Expediente não iniciado</h3>
+                                    <p>Seu horário começa às {currentDayStatus.entrada}</p>
+                                </div>
+                            </>
+                        )}
+                        {currentStatus === 'apos-expediente' && (
+                            <>
+                                <FaRegClock className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Expediente encerrado</h3>
+                                    <p>Seu horário encerrou às {currentDayStatus.saida}</p>
+                                </div>
+                            </>
+                        )}
+                        {/* NOVO CASO: Dia de folga */}
+                        {currentStatus === 'dia-folga' && (
+                            <>
+                                <FaCalendarAlt className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Hoje é seu dia de folga</h3>
+                                    <p>Aproveite seu descanso!</p>
+                                </div>
+                            </>
+                        )}
+                        {currentStatus === 'fora-expediente' && (
+                            <>
+                                <FaCalendarAlt className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Dia sem expediente</h3>
+                                    <p>Não há horário configurado para hoje</p>
+                                </div>
+                            </>
+                        )}
+                        {currentStatus === 'indeterminado' && (
+                            <>
+                                <FaRegClock className="status-icon" />
+                                <div className="status-text">
+                                    <h3>Status indeterminado</h3>
+                                    <p>Verifique sua escala de trabalho</p>
+                                </div>
+                            </>
+                        )}
                     </div>
-                )}
-
-        
+                    
+                    <div className="today-schedule">
+                        <h4><FaCalendarAlt /> Horário de Hoje: {formatWeekday(currentDayStatus.diaSemana)}</h4>
+                        <div className="schedule-times">
+                            {currentStatus === 'dia-folga' ? (
+                                <div className="folga-message">
+                                    <p>🌴 Dia de folga - Sem expediente</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="schedule-time">
+                                        <span>Entrada:</span> 
+                                        <strong>{currentDayStatus.entrada || "Não definido"}</strong>
+                                    </div>
+                                    <div className="schedule-time">
+                                        <span>Saída:</span> 
+                                        <strong>{currentDayStatus.saida || "Não definido"}</strong>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </section>
                 
+                {/* Gráficos atualizados */}
                 <div className="dashboard-grid">
-                    <div className="chart-container hours-chart">
-                        <h3><FaChartBar /> Registros da Semana</h3>
+                    <div className="chart-container attendance-line-chart">
+                        <h3><FaChartBar /> Horários da Semana Atual</h3>
                         <div className="chart-wrapper">
-                            <Bar 
-                                key={chartKey} 
-                                data={hoursChartData} 
-                                options={chartOptions} 
+                            <Line 
+                                key={`line-${chartKey}`}
+                                data={lineChartData} 
+                                options={lineOptions} 
                             />
                         </div>
                     </div>
                     
                     <div className="chart-container summary-stats">
-                        <h3>Resumo da Semana</h3>
+                        <h3>Resumo da Semana Atual</h3>
                         <div className="stats-grid">
                             <div className="stat-card">
-                                <p className="stat-title">Total de Presenças</p>
-                                <p className="stat-value">{attendanceData.filter(item => item.y > 0).length}</p>
+                                <p className="stat-title">Dias de Trabalho</p>
+                                <p className="stat-value">
+                                    {attendanceData.filter(item => item.isWorkDay).length}
+                                </p>
                             </div>
                             <div className="stat-card">
-                                <p className="stat-title">Total de Ausências</p>
-                                <p className="stat-value">{attendanceData.filter(item => item.y === 0).length}</p>
+                                <p className="stat-title">Dias Presentes</p>
+                                <p className="stat-value">
+                                    {attendanceData.filter(item => item.isWorkDay && item.entrada !== null).length}
+                                </p>
+                            </div>
+                            <div className="stat-card">
+                                <p className="stat-title">Dias Ausentes</p>
+                                <p className="stat-value">
+                                    {attendanceData.filter(item => item.isWorkDay && item.entrada === null).length}
+                                </p>
                             </div>
                             <div className="stat-card">
                                 <p className="stat-title">Taxa de Presença</p>
                                 <p className="stat-value">
-                                    {Math.round((attendanceData.filter(item => item.y > 0).length / 7) * 100)}%
+                                    {(() => {
+                                        const diasTrabalho = attendanceData.filter(item => item.isWorkDay);
+                                        const diasPresentes = diasTrabalho.filter(item => item.entrada !== null);
+                                        return diasTrabalho.length > 0 ? Math.round((diasPresentes.length / diasTrabalho.length) * 100) : 0;
+                                    })()}%
                                 </p>
                             </div>
+                        </div>
+                        
+                        <div className="doughnut-chart-container">
+                            <Doughnut 
+                                key={`doughnut-${chartKey}`}
+                                data={pieChartData}
+                                options={pieOptions}
+                            />
                         </div>
                     </div>
                 </div>
                 
+                {/* Botões de ação rápida */}
                 <div className="quick-actions">
                     <Link to="/controle" className="action-card">
                         <FaChartBar className="action-icon" />
