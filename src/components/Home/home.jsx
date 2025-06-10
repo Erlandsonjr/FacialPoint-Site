@@ -37,15 +37,12 @@ function Home() {
     const [chartKey, setChartKey] = useState(0);
     const [currentServerTime, setCurrentServerTime] = useState(null);
     const [horarioTrabalho, setHorarioTrabalho] = useState(null);
-    const [currentDayStatus, setCurrentDayStatus] = useState({
-        diaSemana: '',
-        entrada: null,
-        saida: null
-    });
     const [registrosDia, setRegistrosDia] = useState({
         entrada: null,
         saida: null
     });
+    const [attendanceRaw, setAttendanceRaw] = useState(null);
+    const [usingLocalTime, setUsingLocalTime] = useState(false);
     
     const navigate = useNavigate();
     const userDataFetched = React.useRef(false);
@@ -62,84 +59,78 @@ function Home() {
 
     // Determinar status atual (presente/ausente/fora de horário)
     const currentStatus = useMemo(() => {
-        if (!currentServerTime || !horarioTrabalho || !currentDayStatus.diaSemana) {
+        if (!currentServerTime || !horarioTrabalho) {
             return 'indeterminado';
         }
 
         const agora = currentServerTime;
         const horaAtual = agora.getHours() + (agora.getMinutes() / 60);
-        
-        // NOVA LÓGICA: Verificar se o dia atual tem horário de trabalho configurado
-        const temHorarioHoje = currentDayStatus.entrada && currentDayStatus.saida && 
-                              currentDayStatus.entrada !== "" && currentDayStatus.saida !== "";
-        
-        // Se não tem horário configurado para hoje, é dia de folga
+
+        // Descobrir o dia da semana atual
+        const diasSemana = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+        const diaSemanaAtual = diasSemana[agora.getDay()];
+        const horarioDia = horarioTrabalho[diaSemanaAtual];
+
+        // Verificar se tem expediente configurado para hoje
+        const temHorarioHoje = horarioDia && horarioDia.entrada && horarioDia.saida &&
+            horarioDia.entrada.trim() !== "" && horarioDia.saida.trim() !== "";
+
         if (!temHorarioHoje) {
             return 'dia-folga';
         }
-        
+
         // Converter horário de trabalho para números
-        const [entradaHora, entradaMinuto] = currentDayStatus.entrada.split(':').map(Number);
-        const [saidaHora, saidaMinuto] = currentDayStatus.saida.split(':').map(Number);
-        
+        const [entradaHora, entradaMinuto] = horarioDia.entrada.split(':').map(Number);
+        const [saidaHora, saidaMinuto] = horarioDia.saida.split(':').map(Number);
+
         const horaEntrada = entradaHora + (entradaMinuto / 60);
         const horaSaida = saidaHora + (saidaMinuto / 60);
-        
+
         // Verificar se está dentro do horário de trabalho
         if (horaAtual >= horaEntrada && horaAtual <= horaSaida) {
-            // Verificar se registrou entrada hoje
             if (registrosDia.entrada) {
                 if (registrosDia.saida) {
-                    return 'finalizado'; // Já registrou entrada e saída
+                    return 'finalizado';
                 }
-                return 'presente'; // Registrou entrada mas não saída
+                return 'presente';
             }
-            return 'ausente'; // Não registrou entrada mas está em horário
+            return 'ausente';
         } else if (horaAtual < horaEntrada) {
-            return 'antes-expediente'; // Ainda não começou o expediente
+            return 'antes-expediente';
         } else {
-            return 'apos-expediente'; // Já passou do horário de expediente
+            return 'apos-expediente';
         }
-    }, [currentServerTime, horarioTrabalho, currentDayStatus, registrosDia]);
+    }, [currentServerTime, horarioTrabalho, registrosDia]);
+
+    const currentDayStatus = useMemo(() => {
+        if (!currentServerTime || !horarioTrabalho) return { diaSemana: '', entrada: null, saida: null };
+        const diasSemana = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+        const diaSemanaAtual = diasSemana[currentServerTime.getDay()];
+        const horarioDia = horarioTrabalho[diaSemanaAtual];
+        return {
+            diaSemana: diaSemanaAtual,
+            entrada: (horarioDia && horarioDia.entrada && horarioDia.entrada.trim() !== "") ? horarioDia.entrada : null,
+            saida: (horarioDia && horarioDia.saida && horarioDia.saida.trim() !== "") ? horarioDia.saida : null
+        };
+    }, [currentServerTime, horarioTrabalho]);
 
     useEffect(() => {
         const fetchUserData = async () => {
+            console.log("Iniciando fetchUserData");
             if (userDataFetched.current) {
                 console.log("Dados do usuário já foram carregados");
                 return;
             }
-
             try {
+                console.log("Entrou no try do fetchUserData");
                 // Obter horário oficial do backend
-                const timeResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/horario-brasilia');
-                
-                if (!timeResponse.ok) {
-                    throw new Error(`Erro ao obter horário inicial: ${timeResponse.status}`);
-                }
-                
+                const timeResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia');
+                if (!timeResponse.ok) throw new Error(`Erro ao atualizar horário: ${timeResponse.status}`);
                 const timeData = await timeResponse.json();
-                let serverTime = null;
+                const serverTime = new Date(timeData.dateTime || timeData.datetime);
                 
-                // Extrair o horário dos dados recebidos
-                if (timeData && timeData.components) {
-                    const components = timeData.components;
-                    serverTime = new Date(
-                        components.year,
-                        components.month - 1,
-                        components.day,
-                        components.hour,
-                        components.minute,
-                        components.second
-                    );
-                } else if (timeData && timeData.isoString) {
-                    serverTime = new Date(timeData.isoString);
-                } else if (timeData && timeData.timestamp) {
-                    serverTime = new Date(timeData.timestamp);
-                } else {
-                    serverTime = new Date();
-                }
-
                 setCurrentServerTime(serverTime);
+                setUsingLocalTime(false);
                 
                 // Obter dados do usuário
                 const token = localStorage.getItem('token');
@@ -174,11 +165,7 @@ function Home() {
                             const horarioDia = userData.horarioTrabalho[diaSemanaAtual];
                             
                             // Configurar horário do dia atual com verificação mais rigorosa
-                            setCurrentDayStatus({
-                                diaSemana: diaSemanaAtual,
-                                entrada: (horarioDia && horarioDia.entrada && horarioDia.entrada.trim() !== "") ? horarioDia.entrada : null,
-                                saida: (horarioDia && horarioDia.saida && horarioDia.saida.trim() !== "") ? horarioDia.saida : null
-                            });
+;
                             
                             console.log(`Horário para ${diaSemanaAtual}:`, horarioDia);
                         }
@@ -220,7 +207,7 @@ function Home() {
                 if (!attendanceResponse.ok) {
                     if (attendanceResponse.status === 404) {
                         console.log("Usuário sem registros de frequência");
-                        processAttendanceData([]);
+                        // processAttendanceData([]);
                         return;
                     }
                     
@@ -237,13 +224,13 @@ function Home() {
                         if (errorData.erro && (errorData.erro.includes("não encontrado") || 
                             errorData.erro.includes("frequência"))) {
                             console.log("Usuário sem registros ainda");
-                            processAttendanceData([]);
+                            // processAttendanceData([]);
                             return;
                         }
                         
                         throw new Error(`Erro ao carregar frequências: ${errorData.erro}`);
                     } catch (jsonError) {
-                        processAttendanceData([]);
+                        // processAttendanceData([]);
                         setError("Não foi possível carregar seu histórico de frequências.");
                     }
                     return;
@@ -252,7 +239,7 @@ function Home() {
                 const attendanceData = await attendanceResponse.json();
                 console.log("Dados de frequência recebidos:", attendanceData);
                 
-                processAttendanceData(attendanceData);
+                setAttendanceRaw(attendanceData);
                 
             } catch (error) {
                 console.error('Erro:', error);
@@ -277,49 +264,49 @@ function Home() {
         };
     }, []);
     
-    // Sincronização do relógio com o servidor
+    // Sincronização do relógio com o servidor (igual ao registro)
     useEffect(() => {
         let localTimer;
         let syncTimer;
-        let localTime = null;
+        let failedAttempts = 0;
+        const maxFailedAttempts = 3;
         
-        // Função para sincronizar com o servidor
+        let localTime = currentServerTime || new Date();
+        
+        // Função para sincronizar com o servidor - VERSÃO CORRIGIDA
         const syncWithServer = async () => {
             try {
-                const timeResponse = await fetch(`https://faceponto-banco-dados-production.up.railway.app/horario-brasilia?t=${Date.now()}`);
+                console.log('🔄 Tentando sincronizar horário com servidor...');
+                const timeResponse = await fetch('https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia'); // ✅ URL CORRETA
                 
-                if (!timeResponse.ok) {
-                    throw new Error(`Erro ao atualizar horário: ${timeResponse.status}`);
-                }
+                if (!timeResponse.ok) throw new Error(`Erro ao atualizar horário: ${timeResponse.status}`);
                 
                 const timeData = await timeResponse.json();
-                let serverTime = null;
+                const serverTime = new Date(timeData.dateTime || timeData.datetime); // ✅ CONSIDERA AMBOS OS FORMATOS
                 
-                if (timeData && timeData.components) {
-                    const components = timeData.components;
-                    serverTime = new Date(
-                        components.year,
-                        components.month - 1,
-                        components.day,
-                        components.hour,
-                        components.minute,
-                        components.second
-                    );
-                } else if (timeData && timeData.isoString) {
-                    serverTime = new Date(timeData.isoString);
-                } else if (timeData && timeData.timestamp) {
-                    serverTime = new Date(timeData.timestamp);
-                } else {
-                    throw new Error('Formato de resposta do servidor não reconhecido');
-                }
-                
+                // Resetar contador de falhas quando bem-sucedido
+                failedAttempts = 0;
                 localTime = serverTime;
                 setCurrentServerTime(serverTime);
+                setUsingLocalTime(false);
+                
+                console.log('Horário do servidor:', serverTime.toLocaleString('pt-BR'), '| Fuso:', serverTime.getTimezoneOffset()/60);
+                
+                // Log para debug
+                console.log('✓ Horário sincronizado:', serverTime.toLocaleString('pt-BR'));
             } catch (err) {
-                console.error('Erro ao atualizar horário do servidor:', err);
+                // Incrementar contador de falhas
+                failedAttempts++;
+                console.warn(`Falha ao sincronizar horário (tentativa ${failedAttempts}). Usando horário local.`);
+                setUsingLocalTime(true);
+                
+                if (!localTime) {
+                    localTime = new Date();
+                    setCurrentServerTime(new Date());
+                }
             }
         };
-        
+
         // Função para incrementar o horário localmente
         const updateLocalTime = () => {
             if (localTime) {
@@ -328,11 +315,16 @@ function Home() {
             }
         };
 
+        // Sincroniza imediatamente ao montar
         syncWithServer();
-        
+
+        // Atualiza localmente a cada segundo
         localTimer = setInterval(updateLocalTime, 1000);
-        syncTimer = setInterval(syncWithServer, 30000);
-        
+
+        // Sincroniza com o servidor periodicamente (adaptativo)
+        syncTimer = setInterval(syncWithServer, 
+            failedAttempts >= maxFailedAttempts ? 60000 : 30000);
+
         return () => {
             clearInterval(localTimer);
             clearInterval(syncTimer);
@@ -341,40 +333,26 @@ function Home() {
     
     // Processar dados de frequência
     const processAttendanceData = (data) => {
-        console.log("Processando dados de frequência:", data);
-        
-        if (!Array.isArray(data) || data.length === 0) {
-            console.warn("Sem dados de frequência para processar");
-            setAttendanceData([]);
-            return;
-        }
-        
         // Usar a data do servidor já obtida
         let today = currentServerTime || new Date();
-        
+
         // Calcular o início da semana atual (domingo)
         const currentWeekDays = [];
         const todayDayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, etc.
-        
-        // Calcular quantos dias voltar para chegar ao domingo
         const daysToSunday = todayDayOfWeek;
-        
+
         // Criar array com os 7 dias da semana atual (domingo a sábado)
         for (let i = 0; i < 7; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() - daysToSunday + i);
-            
+
             // Formatação para display
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            
-            // Nome do dia da semana
             const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
             const dayName = dayNames[date.getDay()];
-            
-            // Mapear para nomes do schema do banco
             const diasSemanaSchema = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
             const diaSemanaSchema = diasSemanaSchema[date.getDay()];
-            
+
             currentWeekDays.push({
                 dateObj: new Date(date),
                 formatted: formattedDate,
@@ -383,55 +361,41 @@ function Home() {
                 diaSemanaSchema: diaSemanaSchema // Para consultar horarioTrabalho
             });
         }
-        
-        console.log("Dias da semana atual:", currentWeekDays);
-        
-        // Função auxiliar para garantir formato YYYY-MM-DD
+
         function formatDateISO(date) {
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const day = date.getDate().toString().padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        
+
         // Estrutura para armazenar registros por dia
         const registrosPorDia = {};
-        
+
         // Processar todos os registros para agrupar por dia
-        data.forEach(registro => {
-            // Converter a data UTC para horário de Brasília
-            const dataRegistro = new Date(registro.data);
-            
-            // Usar toLocaleString para obter a data local de Brasília
-            const dataLocalBrasilia = new Date(dataRegistro.toLocaleString('en-US', { 
-                timeZone: 'America/Sao_Paulo' 
-            }));
-            
-            // Formato YYYY-MM-DD para indexação usando a data local
-            const dataFormatada = formatDateISO(dataLocalBrasilia);
-            
-            console.log(`Registro: ${registro.tipo_registro} - UTC: ${dataRegistro.toISOString()} - Local Brasília: ${dataLocalBrasilia.toISOString()} - Formatada: ${dataFormatada}`);
-            
-            if (!registrosPorDia[dataFormatada]) {
-                registrosPorDia[dataFormatada] = {
-                    entradas: [],
-                    saidas: []
-                };
-            }
-            
-            // Usar a data local de Brasília para cálculos de horário
-            if (registro.tipo_registro === 'entrada') {
-                registrosPorDia[dataFormatada].entradas.push(dataLocalBrasilia);
-            } else if (registro.tipo_registro === 'saida') {
-                registrosPorDia[dataFormatada].saidas.push(dataLocalBrasilia);
-            }
-        });
-        
-        console.log("Registros agrupados por dia:", registrosPorDia);
-        
+        if (Array.isArray(data)) {
+            data.forEach(registro => {
+                const dataRegistro = new Date(registro.data);
+                const dataLocalBrasilia = new Date(dataRegistro.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                const dataFormatada = formatDateISO(dataLocalBrasilia);
+
+                if (!registrosPorDia[dataFormatada]) {
+                    registrosPorDia[dataFormatada] = {
+                        entradas: [],
+                        saidas: []
+                    };
+                }
+
+                if (registro.tipo_registro === 'entrada') {
+                    registrosPorDia[dataFormatada].entradas.push(dataLocalBrasilia);
+                } else if (registro.tipo_registro === 'saida') {
+                    registrosPorDia[dataFormatada].saidas.push(dataLocalBrasilia);
+                }
+            });
+        }
+
         // Verificar registros para o dia atual
         const hoje = formatDateISO(today);
-        
         if (registrosPorDia[hoje]) {
             const registrosHoje = registrosPorDia[hoje];
             setRegistrosDia({
@@ -444,37 +408,36 @@ function Home() {
                 saida: null
             });
         }
-        
-        // Processar dados para os gráficos da semana atual
+
+        // Sempre monta a semana, mesmo sem registros
         const processedData = currentWeekDays.map(dateInfo => {
-            const dateFmt = dateInfo.fullDate; // Usar formato YYYY-MM-DD
+            const dateFmt = dateInfo.fullDate;
             const dayRecords = registrosPorDia[dateFmt] || { entradas: [], saidas: [] };
-            
+
             // Verificar se o usuário trabalha neste dia
             const horarioDia = horarioTrabalho && horarioTrabalho[dateInfo.diaSemanaSchema];
-            const temHorarioHoje = horarioDia && horarioDia.entrada && horarioDia.saida && 
-                                  horarioDia.entrada.trim() !== "" && horarioDia.saida.trim() !== "";
-            
+            const temHorarioHoje = horarioDia && horarioDia.entrada && horarioDia.saida &&
+                horarioDia.entrada.trim() !== "" && horarioDia.saida.trim() !== "";
+
             // Obter o primeiro horário de entrada e último de saída
-            const entradaHora = dayRecords.entradas.length > 0 
+            const entradaHora = dayRecords.entradas.length > 0
                 ? dayRecords.entradas[0].getHours() + (dayRecords.entradas[0].getMinutes() / 60)
                 : null;
-                
-            const saidaHora = dayRecords.saidas.length > 0 
+
+            const saidaHora = dayRecords.saidas.length > 0
                 ? dayRecords.saidas[dayRecords.saidas.length - 1].getHours() + (dayRecords.saidas[dayRecords.saidas.length - 1].getMinutes() / 60)
                 : null;
-            
-            console.log(`${dateInfo.dayName} ${dateInfo.formatted}: entrada=${entradaHora}, saida=${saidaHora}, trabalha=${temHorarioHoje}`);
-            
+
             return {
-                date: `${dateInfo.dayName}\n${dateInfo.formatted}`, // Mostrar dia da semana + data
+                date: `${dateInfo.dayName}\n${dateInfo.formatted}`,
                 entrada: entradaHora,
                 saida: saidaHora,
-                isWorkDay: temHorarioHoje // NOVO: indica se é dia de trabalho
+                isWorkDay: temHorarioHoje,
+                dateObj: dateInfo.dateObj,
+                diaSemanaSchema: dateInfo.diaSemanaSchema // <-- ADICIONE ESTA LINHA
             };
         });
-        
-        console.log("Dados processados para gráfico da semana atual:", processedData);
+
         setAttendanceData(processedData);
     };
     
@@ -518,10 +481,18 @@ function Home() {
     
     // Dados para o gráfico de rosca (presença) - apenas dias de trabalho
     const pieChartData = useMemo(() => {
-        const diasTrabalho = attendanceData.filter(item => item.isWorkDay);
-        const diasPresentes = diasTrabalho.filter(item => item.entrada !== null);
-        const diasAusentes = diasTrabalho.filter(item => item.entrada === null);
-        
+        // Só considera dias de trabalho já passados (ou hoje, se já passou do horário de entrada)
+        const diasDecididos = attendanceData.filter(item =>
+            item.isWorkDay &&
+            isDayInPastOrToday(
+                item.dateObj,
+                horarioTrabalho?.[item.diaSemanaSchema]?.entrada,
+                currentServerTime
+            )
+        );
+        const diasPresentes = diasDecididos.filter(item => item.entrada !== null);
+        const diasAusentes = diasDecididos.filter(item => item.entrada === null);
+
         return {
             labels: ['Presente', 'Ausente'],
             datasets: [{
@@ -540,7 +511,7 @@ function Home() {
                 borderWidth: 1,
             }]
         };
-    }, [attendanceData]);
+    }, [attendanceData, horarioTrabalho, currentServerTime]);
     
     // Opções para o gráfico de linha
     const lineOptions = {
@@ -700,6 +671,40 @@ function Home() {
         };
         return dias[dia] || dia;
     };
+
+    // Função utilitária para saber se um dia já passou (ou é hoje e já passou do horário de entrada)
+    function isDayInPastOrToday(dateObj, entradaHorarioTrabalho, currentServerTime) {
+        const today = new Date(currentServerTime);
+        today.setHours(0,0,0,0);
+
+        const dia = new Date(dateObj);
+        dia.setHours(0,0,0,0);
+
+        if (dia < today) return true; // Dias anteriores contam sempre
+
+        if (dia.getTime() === today.getTime()) {
+            // Só conta como "já passou" se já passou do horário de entrada
+            if (!entradaHorarioTrabalho) return false;
+            const [entradaHora, entradaMinuto] = entradaHorarioTrabalho.split(':').map(Number);
+            const agora = currentServerTime;
+            if (
+                agora.getHours() > entradaHora ||
+                (agora.getHours() === entradaHora && agora.getMinutes() >= entradaMinuto)
+            ) {
+                return true;
+            }
+            // Ainda não chegou o horário de entrada
+            return false;
+        }
+        // Dias futuros não contam
+        return false;
+    }
+
+    useEffect(() => {
+        if (horarioTrabalho && attendanceRaw) {
+            processAttendanceData(attendanceRaw);
+        }
+    }, [horarioTrabalho, attendanceRaw]);
 
     if (loading) return (
         <div className="home-loading">
@@ -888,20 +893,42 @@ function Home() {
                             <div className="stat-card">
                                 <p className="stat-title">Dias Presentes</p>
                                 <p className="stat-value">
-                                    {attendanceData.filter(item => item.isWorkDay && item.entrada !== null).length}
+                                    {attendanceData.filter(item =>
+                                        item.isWorkDay &&
+                                        item.entrada !== null &&
+                                        isDayInPastOrToday(
+                                            item.dateObj,
+                                            horarioTrabalho?.[item.diaSemanaSchema]?.entrada,
+                                            currentServerTime
+                                        )
+                                    ).length}
                                 </p>
                             </div>
                             <div className="stat-card">
                                 <p className="stat-title">Dias Ausentes</p>
                                 <p className="stat-value">
-                                    {attendanceData.filter(item => item.isWorkDay && item.entrada === null).length}
+                                    {attendanceData.filter(item =>
+                                        item.isWorkDay &&
+                                        item.entrada === null &&
+                                        isDayInPastOrToday(
+                                            item.dateObj,
+                                            horarioTrabalho?.[item.diaSemanaSchema]?.entrada,
+                                            currentServerTime
+                                        )
+                                    ).length}
                                 </p>
                             </div>
                             <div className="stat-card">
-                                <p className="stat-title">Taxa de Presença</p>
+                                <p className="stat-title">Taxa de Presença Até o Momento</p>
                                 <p className="stat-value">
                                     {(() => {
-                                        const diasTrabalho = attendanceData.filter(item => item.isWorkDay);
+                                        const diasTrabalho = attendanceData.filter(item => 
+                                            item.isWorkDay && 
+                                            isDayInPastOrToday(item.dateObj, 
+                                                horarioTrabalho?.[item.diaSemanaSchema]?.entrada, 
+                                                currentServerTime
+                                            )
+                                        );
                                         const diasPresentes = diasTrabalho.filter(item => item.entrada !== null);
                                         return diasTrabalho.length > 0 ? Math.round((diasPresentes.length / diasTrabalho.length) * 100) : 0;
                                     })()}%
