@@ -1,4 +1,4 @@
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaArrowRight } from "react-icons/fa";
 import { useState } from "react";
 import "./Login_Cadastro.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -35,7 +35,6 @@ const Login = () => {
 
       if (data.token) {
         localStorage.setItem("token", data.token);
-        console.log("Login realizado com sucesso!");
         navigate(data.rota);
       }
     } catch (error) {
@@ -46,43 +45,65 @@ const Login = () => {
   };
 
   return (
-    <div className="page-container">
-      <div className="app-header">
-        <div className="logo-container">
-          <img src="/logo.png" alt="FacePonto Logo" className="logo-image" />
-        </div>
-        <h1 className="app-title">FacePonto</h1>
+    <div className="login-page-container-clean">
+      <div className="login-header">
+        <Link to="/" className="login-logo-link">
+          <div className="login-logo-container">
+            <img src="/logo.png" alt="FacePonto Logo" className="login-logo" />
+          </div>
+          <h1 className="login-title">FacePonto</h1>
+        </Link>
       </div>
 
-      <div className="container">
-        {carregando && <div className="loading-overlay"></div>}
-
-        <form onSubmit={handleSubmit}>
-          <h1>Acesse o sistema</h1>
-
-          {erro && <p className="erro">{erro}</p>}
-
-          <div className="input-field">
-            <input
-              type="email"
-              placeholder="E-mail"
-              required
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <FaUser className="icon" />
+      <div className="login-content-wrapper">
+        <div className={`login-form-container ${carregando ? "login-loading" : ""}`}>
+          <div className="login-form-header">
+            <h2>Acesso ao <span className="highlight">Sistema</span></h2>
+            <p className="login-subtitle">
+              Entre com suas credenciais para acessar seu dashboard pessoal
+            </p>
           </div>
 
-          <div className="input-field">
-            <input
-              type="password"
-              placeholder="Senha"
-              required
-              onChange={(e) => setSenha(e.target.value)}
-            />
-          </div>
+          {erro && <div className="login-error-message">{erro}</div>}
 
-          <button type="submit">Entrar</button>
-        </form>
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="login-input-group">
+              <label htmlFor="email">E-mail</label>
+              <div className="login-input-field">
+                <FaUser className="login-input-icon" />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Seu e-mail corporativo"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="login-input-group">
+              <label htmlFor="senha">Senha</label>
+              <div className="login-input-field">
+                <FaLock className="login-input-icon" />
+                <input
+                  id="senha"
+                  type="password"
+                  placeholder="Sua senha"
+                  required
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="login-button-container">
+              <button type="submit" className="login-button">
+                Entrar <FaArrowRight className="login-button-icon" />
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -431,7 +431,6 @@ body {
     justify-content: center;
     align-items: center;
     gap: var(--spacing-lg);
-    background-color: var(--bg-primary);
 }
 
 .loading-spinner {

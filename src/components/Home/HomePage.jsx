@@ -109,8 +109,20 @@ function HomePage() {
             </div>
           </div>
           <div className="hero-visual">
-            <div className="hero-image-placeholder">
-              <FaCameraRetro />
+            <div className="hero-image-placeholder" style={{ border: "none", boxShadow: "none", background: "none", padding: 0 }}>
+              <img
+                src="/logo.png"
+                alt="FacePonto Logo"
+                style={{
+                  width: "100%",
+                  maxWidth: 900,
+                  height: "auto",
+                  borderRadius: 16,
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+                  background: "none",
+                  display: "block"
+                }}
+              />
             </div>
           </div>
         </div>
@@ -281,24 +293,19 @@ function HomePage() {
             >
               Como Funciona
             </button>
-            <Link to="/login" className="footer-link">
+            <button
+              onClick={() => window.location.href = "/login"}
+              className="footer-link"
+              type="button"
+            >
               Acessar Sistema
-            </Link>
+            </button>
           </div>
           <div className="footer-column">
             <h4>Contato</h4>
             <a href="mailto:contato@faceponto.com.br" className="footer-link">
               <FaEnvelope />
               contato@faceponto.com.br
-            </a>
-            <a
-              href="https://github.com/seu-usuario/faceponto-repo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="footer-link"
-            >
-              <FaGithub />
-              Projeto no GitHub
             </a>
           </div>
         </div>

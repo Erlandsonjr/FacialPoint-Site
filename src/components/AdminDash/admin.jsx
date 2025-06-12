@@ -5,7 +5,6 @@ import {
   FaSignOutAlt,
   FaPlus,
   FaSearch,
-  FaFilter,
 } from "react-icons/fa";
 import "./admin.css";
 
@@ -24,10 +23,8 @@ function Admin() {
   useEffect(() => {
     if (users.length > 0) {
       setFilteredUsers(
-        users.filter(
-          (user) =>
-            user.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        users.filter((user) =>
+          user.nome.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
     }
@@ -35,6 +32,7 @@ function Admin() {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const response = await fetch(
         "https://faceponto-banco-dados-production.up.railway.app/public/usuarios/completos"
       );
@@ -45,50 +43,16 @@ function Admin() {
 
       const usersBasicInfo = await response.json();
 
-      const formattedUsers = await Promise.all(
-        usersBasicInfo.map(async (user) => {
-          try {
-            const detailsResponse = await fetch(
-              `https://faceponto-banco-dados-production.up.railway.app/public/usuarios/${user.id}/horario`
-            );
-
-            const horarioTrabalho = detailsResponse.ok
-              ? await detailsResponse.json()
-              : null;
-
-            return {
-              _id: user.id,
-              nome: user.nome,
-              email: `${user.nome
-                .toLowerCase()
-                .replace(/\s/g, ".")}@faceponto.com`,
-              perfil: user.perfil,
-              ativo: true,
-              horarioTrabalho,
-            };
-          } catch (error) {
-            console.warn(
-              `Erro ao buscar detalhes do usuário ${user.nome}:`,
-              error
-            );
-            return {
-              _id: user.id,
-              nome: user.nome,
-              email: `${user.nome
-                .toLowerCase()
-                .replace(/\s/g, ".")}@faceponto.com`,
-              perfil: user.perfil,
-              ativo: true,
-            };
-          }
-        })
-      );
+      const formattedUsers = usersBasicInfo.map(user => ({
+        _id: user.id,
+        nome: user.nome,
+        perfil: user.perfil,
+      }));
 
       setUsers(formattedUsers);
       setFilteredUsers(formattedUsers);
     } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      setError(error.message);
+      setError("Erro ao carregar lista de funcionários. " + error.message);
     } finally {
       setLoading(false);
     }
@@ -162,7 +126,7 @@ function Admin() {
               <FaSearch className="search-icon" />
               <input
                 type="text"
-                placeholder="Buscar funcionário por nome ou email..."
+                placeholder="Buscar funcionário por nome..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -186,10 +150,6 @@ function Admin() {
                   </div>
                   <div className="user-info">
                     <h3>{user.nome}</h3>
-                    <p>{user.email}</p>
-                    <span className="user-status">
-                      Status: {user.ativo ? "Ativo" : "Inativo"}
-                    </span>
                   </div>
                 </div>
               ))
