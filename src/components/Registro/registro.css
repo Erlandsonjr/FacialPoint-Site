@@ -27,17 +27,15 @@ html, body {
     height: 100%;
     min-height: 100vh;
     box-sizing: border-box;
-    overflow-x: hidden; /* Permite rolagem vertical se necessário */
+    overflow-x: hidden; 
     background: linear-gradient(135deg, #333333, #555555);
 }
 
-/* Adicionar estas regras para evitar scroll horizontal */
 html, body {
     max-width: 100%;
     overflow-x: hidden;
 }
 
-/* Modificar o container-registro para garantir que não haja overflow */
 .container-registro {
     width: 100vw;
     max-width: 100%;
@@ -45,7 +43,6 @@ html, body {
     overflow-x: hidden;
 }
 
-/* Garantir que o conteúdo não ultrapasse os limites */
 .registro-content {
     width: 100%;
     max-width: 100%;
@@ -61,20 +58,18 @@ html, body {
   animation: fadeIn 0.5s ease;
 }
 
-/* Ajuste no container principal para ocupar 100% da altura disponível */
 .container-registro {
-    height: 100vh; /* Altura exata da viewport */
+    height: 100vh; 
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    padding: 0; /* Remove padding para maximizar espaço */
-    overflow: hidden; /* Impede rolagem */
+    padding: 0; 
+    overflow: hidden; 
     background: linear-gradient(135deg, #333333, #555555);
 }
 
-/* Container que mantém o layout geral */
 .registro-content {
     width: 100%;
     max-width: 800px;
@@ -91,7 +86,6 @@ html, body {
     overflow: hidden;
 }
 
-/* Área da câmera com proporção consistente */
 .camera-container {
     flex: 1;
     display: flex;
@@ -103,18 +97,16 @@ html, body {
     min-height: 350px;
 }
 
-/* Frame da câmera com proporção fixa */
 .camera-frame {
     position: relative;
     width: 100%;
     height: 0;
-    padding-bottom: 75%; /* Proporção 4:3 */
+    padding-bottom: 75%;
     border-radius: var(--border-radius);
     overflow: hidden;
     background: #000;
 }
 
-/* Preview da câmera ocupa todo o espaço disponível */
 .camera-preview {
     position: absolute;
     top: 0;
@@ -125,11 +117,10 @@ html, body {
     border-radius: 10px;
 }
 
-/* Container da foto capturada com a mesma proporção da câmera */
 .foto-capturada {
     width: 100%;
     height: 0;
-    padding-bottom: 75%; /* Mesma proporção da câmera */
+    padding-bottom: 75%;
     position: relative;
     margin: 15px 0;
     border-radius: var(--border-radius);
@@ -137,7 +128,6 @@ html, body {
     border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Imagem da foto capturada ocupa todo o espaço do container */
 .foto-preview-image {
     position: absolute;
     top: 0;
@@ -148,7 +138,6 @@ html, body {
     border-radius: var(--border-radius);
 }
 
-/* Feedback tem altura adaptável */
 .registro-feedback {
     display: flex;
     flex-direction: column;
@@ -170,7 +159,7 @@ html, body {
 
 .registro-header h1 {
     margin: 0;
-    font-size: 1.5rem; /* Reduz tamanho do título */
+    font-size: 1.5rem; 
     font-weight: var(--font-weight-medium);
     font-family: var(--font-primary);
     letter-spacing: -0.02em;
@@ -230,7 +219,6 @@ html, body {
     margin-bottom: 8px;
 }
 
-/* Adicione ao seu arquivo registro.css */
 .aviso-message {
     background: rgba(33, 150, 243, 0.1);
     border-radius: 10px;
@@ -298,18 +286,16 @@ html, body {
     overflow: hidden;
 }
 
-/* Primeiramente, vamos modificar o container da câmera e da foto para posicionamento relativo */
 .camera-frame, .foto-capturada {
     position: relative;
     width: 100%;
     height: 0;
-    padding-bottom: 75%; /* Proporção 4:3 */
+    padding-bottom: 75%; 
     border-radius: var(--border-radius);
     overflow: hidden;
     background: #000;
 }
 
-/* Adicionar um overlay de informações por cima da câmera/foto */
 .info-overlay {
     position: absolute;
     bottom: 0;
@@ -325,7 +311,6 @@ html, body {
     text-align: center;
 }
 
-/* Estilo para a área de horário no overlay */
 .overlay-time {
     position: absolute;
     top: 15px;
@@ -338,7 +323,6 @@ html, body {
     z-index: 10;
 }
 
-/* Estilo para o nome do usuário no overlay */
 .overlay-user {
     font-size: 1.5rem;
     font-weight: bold;
@@ -346,7 +330,6 @@ html, body {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Estilo para as mensagens de feedback no overlay */
 .overlay-message {
     width: 100%;
     max-width: 320px;
@@ -371,7 +354,6 @@ html, body {
     border-left: 3px solid #ff9800;
 }
 
-/* Responsividade para diferentes tamanhos de tela */
 @media (min-width: 768px) {
     .registro-content {
         max-width: 750px;
@@ -379,7 +361,7 @@ html, body {
     }
     
     .camera-frame, .foto-capturada {
-        padding-bottom: 60%; /* Ligeiramente mais largo em telas maiores */
+        padding-bottom: 60%; 
     }
 }
 
@@ -397,11 +379,10 @@ html, body {
     .camera-frame, .foto-capturada {
         width: 100%;
         height: 0;
-        padding-bottom: 133%; /* Proporção vertical 3:4 para celulares */
+        padding-bottom: 133%; 
         aspect-ratio: 3/4;
     }
     
-    /* Certificar-se que a imagem e vídeo preenchem corretamente */
     .camera-preview, .foto-preview-image {
         position: absolute;
         top: 0;
@@ -411,12 +392,10 @@ html, body {
         object-fit: cover;
     }
     
-    /* Ajustar o overlay de informações para proporcionar mais espaço */
     .info-overlay {
         padding: 15px 10px;
     }
     
-    /* Reduzir tamanho do texto do usuário para caber melhor */
     .overlay-user {
         font-size: 1.3rem;
     }
@@ -424,7 +403,7 @@ html, body {
 
 @media (max-width: 768px) {
     .camera-frame {
-        aspect-ratio: unset; /* Remover esta definição que estava causando conflito */
+        aspect-ratio: unset; 
     }
 }
 
@@ -463,7 +442,7 @@ html, body {
     border-radius: var(--border-radius);
     overflow: hidden;
     background: #000;
-    min-height: 0; /* Permite que encolha abaixo da altura mínima típica */
+    min-height: 0; 
     width: 100%;
 }
 
@@ -781,16 +760,13 @@ html, body {
     pointer-events: none;
 }
 
-/* Estilos para o modo automatizado */
-
-/* Modo standby */
 .standby-mode {
   opacity: 0.7;
   transition: opacity 1s ease;
 }
 
 .dim-video {
-  filter: brightness(0); /* Alterado de 0.5 para 0, tornando completamente escuro */
+  filter: brightness(0); 
   transition: filter 1s ease;
 }
 
@@ -806,7 +782,6 @@ html, body {
   animation: pulse 2s infinite;
 }
 
-/* Indicador visual para face detectada */
 .face-guide {
   width: 220px;
   height: 220px;
@@ -835,7 +810,6 @@ html, body {
   animation: pulse 1.5s infinite;
 }
 
-/* Debug info */
 .status-debug {
   position: absolute;
   bottom: 10px;
@@ -848,7 +822,6 @@ html, body {
   font-family: monospace;
 }
 
-/* Usuário reconhecido */
 .usuario-reconhecido {
   background: rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius);
@@ -870,7 +843,6 @@ html, body {
   font-size: 1.1rem;
 }
 
-/* Adicione ao arquivo registro.css */
 .registro-feedback {
   display: flex;
   flex-direction: column;
@@ -900,7 +872,6 @@ html, body {
   margin: 10px 0 0;
 }
 
-/* Adicione estas regras ao seu CSS */
 .processando-overlay {
   position: absolute;
   bottom: 15px;
@@ -928,7 +899,6 @@ html, body {
   100% { transform: rotate(360deg); }
 }
 
-/* Animação pulse */
 @keyframes pulse {
   0% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(76, 175, 80, 0.5); }
   70% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 0 15px rgba(76, 175, 80, 0); }
@@ -1050,16 +1020,14 @@ html, body {
     }
 }
 
-/* Ajustar para telas pequenas */
 @media (max-width: 480px) {
     .camera-frame, .foto-capturada {
         width: 100%;
         height: 0;
-        padding-bottom: 133%; /* Proporção vertical 3:4 para celulares */
+        padding-bottom: 133%; 
         aspect-ratio: 3/4;
     }
     
-    /* Certificar-se que a imagem e vídeo preenchem corretamente */
     .camera-preview, .foto-preview_image {
         position: absolute;
         top: 0;
@@ -1069,21 +1037,18 @@ html, body {
         object-fit: cover;
     }
     
-    /* Ajustar o overlay de informações para proporcionar mais espaço */
     .info-overlay {
         padding: 15px 10px;
     }
     
-    /* Reduzir tamanho do texto do usuário para caber melhor */
     .overlay-user {
         font-size: 1.3rem;
     }
 }
 
-/* Remover definições conflitantes */
 @media (max-width: 768px) {
     .camera-frame {
-        aspect-ratio: unset; /* Remover esta definição que estava causando conflito */
+        aspect-ratio: unset; 
     }
 }
 
@@ -1094,7 +1059,6 @@ html, body {
     }
 }
 
-/* Adicionar ao seu CSS */
 .responsive-content {
   display: flex;
   flex-direction: column;
@@ -1103,7 +1067,6 @@ html, body {
   max-height: none;
 }
 
-/* Adicione este estilo para a mensagem de registro duplicado dentro do nome do usuário */
 .registro-duplicado-message {
   margin-top: 10px;
   padding: 10px 15px;
@@ -1152,8 +1115,6 @@ html, body {
   font-size: 0.85rem;
 }
 
-/* Estilos para a versão de tela cheia */
-
 .fullscreen-container {
   position: fixed;
   top: 0;
@@ -1183,11 +1144,10 @@ html, body {
 }
 
 .dim-video {
-  filter: brightness(0); /* Alterado de 0.5 para 0, tornando completamente escuro */
+  filter: brightness(0); 
   transition: filter 1s ease;
 }
 
-/* Sobreposições */
 .header-overlay {
   position: absolute;
   top: 0;
@@ -1222,10 +1182,10 @@ html, body {
 
 .status-overlay {
   position: absolute;
-  bottom: 0; /* Eliminará o espaço entre o overlay e a borda da tela */
+  bottom: 0;
   left: 0;
   width: 100%;
-  padding: 30px 20px 20px; /* Aumentado padding superior para manter espaço visual */
+  padding: 30px 20px 20px; 
   text-align: center;
   z-index: 1020;
   background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
@@ -1285,7 +1245,6 @@ html, body {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Face guide centralizado na tela */
 .face-overlay {
   position: absolute;
   top: 0;
@@ -1336,7 +1295,6 @@ html, body {
   animation: pulseSize 1s infinite;
 }
 
-/* Debug panel */
 .debug-panel {
   position: absolute;
   top: 80px;
@@ -1364,7 +1322,6 @@ html, body {
   cursor: pointer;
 }
 
-/* Animações */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -1388,7 +1345,6 @@ html, body {
   100% { transform: scale(1); }
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
   .header-overlay h1 {
     font-size: 1.5rem;
@@ -1423,17 +1379,16 @@ html, body {
   }
   
   .time-overlay {
-    top: 60px; /* Posicionar abaixo do cabeçalho */
+    top: 60px; 
     right: 10px;
     font-size: 0.8rem;
     padding: 5px 10px;
-    z-index: 1015; /* Garantir que esteja acima dos outros elementos */
+    z-index: 1015; 
   }
   
-  /* Ajuste para o cabeçalho em telas pequenas */
   .header-overlay {
     padding: 10px 15px;
-    height: 50px; /* Altura fixa para o cabeçalho */
+    height: 50px;
   }
   
   .header-overlay h1 {
@@ -1444,7 +1399,7 @@ html, body {
 
 @media (max-width: 360px) {
   .time-overlay {
-    top: 55px; /* Ajuste para telas muito pequenas */
+    top: 55px;
     padding: 4px 8px;
     font-size: 0.75rem;
   }
@@ -1454,7 +1409,6 @@ html, body {
   }
 }
 
-/* Garantir que o horário não sobreponha em telas médias */
 @media (min-width: 481px) and (max-width: 768px) {
   .time-overlay {
     top: 15px;
@@ -1462,13 +1416,11 @@ html, body {
   }
   
   .header-overlay {
-    padding-right: 100px; /* Espaço para o horário */
+    padding-right: 100px; 
   }
 }
 
-/* Correção para posicionamento das mensagens em dispositivos móveis */
 @media (max-width: 480px) {
-  /* Remover transformação que está causando desalinhamento */
   .feedback-message.success,
   .feedback-message.warning, 
   .feedback-message.error {
@@ -1480,7 +1432,6 @@ html, body {
     margin: 0 auto;
   }
   
-  /* Centralizar adequadamente o conteúdo na sobreposição de status */
   .status-overlay {
     display: flex;
     flex-direction: column;
@@ -1489,19 +1440,17 @@ html, body {
     text-align: center;
   }
   
-  /* Correção para o horário em telas pequenas */
   .time-overlay {
-    top: 60px; /* Posicionar abaixo do cabeçalho */
+    top: 60px; 
     right: 10px;
     font-size: 0.8rem;
     padding: 5px 10px;
-    z-index: 1015; /* Garantir que esteja acima dos outros elementos */
+    z-index: 1015; 
   }
   
-  /* Ajuste para o cabeçalho em telas pequenas */
   .header-overlay {
     padding: 10px 15px;
-    height: 50px; /* Altura fixa para o cabeçalho */
+    height: 50px; 
   }
   
   .header-overlay h1 {
@@ -1510,10 +1459,9 @@ html, body {
   }
 }
 
-/* Correção para telas muito pequenas */
 @media (max-width: 360px) {
   .time-overlay {
-    top: 55px; /* Ajuste para telas muito pequenas */
+    top: 55px; 
     padding: 4px 8px;
     font-size: 0.75rem;
   }
@@ -1523,11 +1471,7 @@ html, body {
   }
 }
 
-/* Adicione estas correções ao final do seu arquivo CSS */
-
-/* Correção definitiva para mensagens em dispositivos móveis */
 @media (max-width: 480px) {
-  /* Container principal de status */
   .status-overlay {
     padding: 20px 10px;
     display: flex;
@@ -1537,7 +1481,6 @@ html, body {
     align-items: center;
   }
 
-  /* Nome do usuário */
   .feedback-user {
     width: 100%;
     font-size: 1.5rem;
@@ -1547,7 +1490,6 @@ html, body {
     box-sizing: border-box;
   }
 
-  /* Mensagens de feedback - simplificadas */
   .feedback-message {
     width: 100% !important;
     max-width: 100% !important;
@@ -1562,13 +1504,11 @@ html, body {
     text-align: center;
   }
 
-  /* Corrigir overflow horizontal */
   body, html {
     overflow-x: hidden;
     max-width: 100vw;
   }
 
-  /* Garantir que o texto não ultrapasse a área visível */
   .feedback-message p, .feedback-message .erro-dica {
     overflow-wrap: break-word;
     word-wrap: break-word;
@@ -1578,7 +1518,6 @@ html, body {
     padding: 0;
   }
 
-  /* Reduzir tamanho da fonte para caber melhor */
   .feedback-message {
     font-size: 0.9rem !important;
   }

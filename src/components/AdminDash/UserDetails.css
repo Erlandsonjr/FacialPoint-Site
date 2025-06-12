@@ -45,7 +45,6 @@
     gap: 30px;
 }
 
-/* Profile Styles */
 .user-profile {
     background-color: var(--bg-primary);
     border-radius: 12px;
@@ -147,7 +146,6 @@
     font-weight: 500;
 }
 
-/* Attendance Styles */
 .attendance-section {
     background-color: var(--bg-primary);
     border-radius: 12px;
@@ -239,7 +237,6 @@
     font-size: 1.1rem;
 }
 
-/* Loading and Error States */
 .user-details-loading,
 .user-details-error {
     display: flex;
@@ -291,7 +288,6 @@
     background-color: var(--primary-hover);
 }
 
-/* Responsive Styles */
 @media (max-width: 768px) {
     .user-details-content {
         padding: 20px 15px;

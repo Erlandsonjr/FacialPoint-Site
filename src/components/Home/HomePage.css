@@ -3,25 +3,24 @@
 :root {
   --primary-color: #f5a623;
   --primary-hover: #ff7b00;
-  --dark-bg: #141414; /* Fundo principal mais escuro e sólido */
-  --dark-bg-lighter: #1a1a1a; /* Para elementos de card ou seções levemente destacadas */
-  --card-bg: rgba(35, 35, 35, 0.5); /* Cards com mais sutileza */
+  --dark-bg: #141414; 
+  --dark-bg-lighter: #1a1a1a; 
+  --card-bg: rgba(35, 35, 35, 0.5); 
   --card-hover: rgba(45, 45, 45, 0.7);
   --text-primary: rgba(255, 255, 255, 0.95);
   --text-secondary: rgba(255, 255, 255, 0.7);
   --text-muted: rgba(255, 255, 255, 0.5);
   --border-color: rgba(255, 255, 255, 0.1);
   --border-color-strong: rgba(255, 255, 255, 0.2);
-  --border-radius: 12px; /* Raio de borda mais sutil */
+  --border-radius: 12px; 
   --border-radius-lg: 20px;
   --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.35);
-  --glow-effect: 0 0 20px rgba(245, 166, 35, 0.25); /* Efeito de brilho mais sutil */
+  --glow-effect: 0 0 20px rgba(245, 166, 35, 0.25); 
 }
 
-/* Reset e Configurações Base */
 * {
   margin: 0;
   padding: 0;
@@ -31,7 +30,7 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
-  font-size: 16px; /* Base para REM */
+  font-size: 16px; 
 }
 
 body {
@@ -44,21 +43,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Container Principal */
 .landing-container {
   width: 100%;
-  overflow-x: hidden; /* ALTERADO: Permite scroll vertical, previne horizontal */
-  /* overflow: hidden; */ /* REMOVIDO ou COMENTADO */
+  overflow-x: hidden; 
 }
 
-/* Header */
 .landing-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(20, 20, 20, 0.7); /* Mais translúcido */
+  background: rgba(20, 20, 20, 0.7);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -71,9 +67,9 @@ body {
 }
 
 .header-content {
-  max-width: 1280px; /* Largura máxima maior para telas grandes */
+  max-width: 1280px; 
   margin: 0 auto;
-  height: 72px; /* Altura do header ajustada */
+  height: 72px; 
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -87,7 +83,7 @@ body {
 }
 
 .logo-image {
-  width: 36px; /* Logo um pouco menor */
+  width: 36px; 
   height: 36px;
   border-radius: 6px;
   transition: transform 0.3s ease;
@@ -98,7 +94,7 @@ body {
 
 .logo-title {
   font-family: 'Poppins', sans-serif;
-  font-size: 1.375rem; /* 22px */
+  font-size: 1.375rem; 
   font-weight: 700;
   color: var(--primary-color);
 }
@@ -113,7 +109,7 @@ body {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem; 
   font-weight: 500;
   padding: 10px 16px;
   border-radius: 8px;
@@ -146,7 +142,7 @@ body {
   color: var(--dark-bg);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem; 
   padding: 10px 20px;
   border-radius: 8px;
   transition: var(--transition);
@@ -156,35 +152,34 @@ body {
 .nav-button:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
-  color: var(--dark-bg); /* ADICIONADO: Garante que o texto permaneça escuro */
+  color: var(--dark-bg); 
   box-shadow: var(--glow-effect);
   transform: translateY(-2px);
 }
 
-/* Seções Genéricas */
 .section {
-  padding: 80px 24px; /* Padding vertical maior */
+  padding: 80px 24px; 
   position: relative;
-  border-bottom: 1px solid var(--border-color); /* Divisor sutil */
+  border-bottom: 1px solid var(--border-color); 
 }
 .section:last-of-type {
   border-bottom: none;
 }
 
 .section-container {
-  max-width: 1100px; /* Conteúdo um pouco mais contido para melhor leitura */
+  max-width: 1100px; 
   margin: 0 auto;
 }
 
 .section-header {
   text-align: center;
   max-width: 700px;
-  margin: 0 auto 60px; /* Espaçamento maior */
+  margin: 0 auto 60px; 
 }
 
 .section-header h2 {
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(2rem, 5vw, 2.75rem); /* 44px */
+  font-size: clamp(2rem, 5vw, 2.75rem); 
   font-weight: 700;
   margin-bottom: 16px;
   color: var(--text-primary);
@@ -192,35 +187,34 @@ body {
 }
 
 .section-header p {
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem; 
   color: var(--text-secondary);
   line-height: 1.8;
 }
 
-/* Hero Section */
 .hero-section {
-  min-height: calc(100vh - 72px); /* Descontar altura do header */
+  min-height: calc(100vh - 72px); 
   display: flex;
   align-items: center;
-  padding-top: 72px; /* Espaço para o header fixo */
-  padding-bottom: 100px; /* Padding base para o scroll indicator */
+  padding-top: 72px; 
+  padding-bottom: 100px; 
   background:
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 166, 35, 0.15), transparent),
     var(--dark-bg);
-  border-bottom: none; /* Hero não precisa de borda inferior */
-  position: relative; /* Essencial para o posicionamento absoluto do scroll-indicator */
+  border-bottom: none; 
+  position: relative; 
 }
 
 .hero-content {
   display: grid;
-  grid-template-columns: 1.2fr 1fr; /* Mais espaço para o texto */
+  grid-template-columns: 1.2fr 1fr; 
   gap: 60px;
   align-items: center;
 }
 
 .hero-text h1 {
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(2.75rem, 6vw, 3.75rem); /* 60px */
+  font-size: clamp(2.75rem, 6vw, 3.75rem); 
   font-weight: 800;
   line-height: 1.15;
   margin-bottom: 24px;
@@ -232,7 +226,7 @@ body {
 }
 
 .hero-text p.subtitle {
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.25rem; 
   color: var(--text-secondary);
   margin-bottom: 40px;
   max-width: 550px;
@@ -245,9 +239,9 @@ body {
 }
 
 .hero-button {
-  padding: 14px 28px; /* Botões um pouco maiores */
+  padding: 14px 28px; 
   border-radius: 10px;
-  font-size: 1rem; /* 16px */
+  font-size: 1rem; 
   font-weight: 600;
   text-decoration: none;
   transition: var(--transition);
@@ -284,7 +278,7 @@ body {
   justify-content: center;
   align-items: center;
 }
-.hero-image-placeholder { /* Substituir por uma imagem/ilustração real */
+.hero-image-placeholder { 
   width: 100%;
   max-width: 450px;
   height: 350px;
@@ -305,9 +299,12 @@ body {
   position: absolute;
   inset: 0;
   border-radius: var(--border-radius-lg);
-  padding: 1px; /* Controla a espessura da borda do gradiente */
+  padding: 1px; 
   background: linear-gradient(45deg, var(--primary-color), var(--primary-hover));
   -webkit-mask:
+     linear-gradient(#fff 0 0) content-box,
+     linear-gradient(#fff 0 0);
+  mask:
      linear-gradient(#fff 0 0) content-box,
      linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -319,23 +316,21 @@ body {
   opacity: 1;
 }
 
-
-/* Features Section */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px; /* Espaçamento entre cards */
+  gap: 24px; 
 }
 
 .feature-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  padding: 28px; /* Padding interno dos cards */
+  padding: 28px; 
   transition: var(--transition);
   display: flex;
   flex-direction: column;
-  gap: 16px; /* Espaço entre ícone, título e texto */
+  gap: 16px; 
 }
 
 .feature-card:hover {
@@ -354,42 +349,41 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--dark-bg);
-  font-size: 1.5rem; /* Tamanho do ícone */
+  font-size: 1.5rem; 
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
 }
 
 .feature-card h3 {
   font-family: 'Poppins', sans-serif;
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.25rem; 
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .feature-card p {
   color: var(--text-secondary);
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem; 
   line-height: 1.7;
 }
 
-/* How it Works Section */
 .steps-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 40px; /* Espaçamento maior para os passos */
+  gap: 40px; 
   position: relative;
-  align-items: start; /* Alinha os cards pelo topo */
+  align-items: start; 
 }
 
 .step-card {
   text-align: center;
   position: relative;
-  padding-top: 40px; /* Espaço para o número */
+  padding-top: 40px; 
 }
 
 .step-number {
   position: absolute;
-  top: -10px; /* Número flutuando acima */
+  top: -10px; 
   left: 50%;
   transform: translateX(-50%);
   width: 50px;
@@ -401,15 +395,15 @@ body {
   align-items: center;
   justify-content: center;
   font-family: 'Poppins', sans-serif;
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.25rem;
   font-weight: 700;
-  border: 3px solid var(--dark-bg); /* Efeito de borda */
+  border: 3px solid var(--dark-bg); 
   box-shadow: var(--shadow-md);
 }
 
 .step-card h3 {
   font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem; 
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-primary);
@@ -417,26 +411,23 @@ body {
 
 .step-card p {
   color: var(--text-secondary);
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem; 
 }
 
-/* Linhas conectoras para desktop */
 @media (min-width: 769px) {
   .step-card:not(:last-child)::after {
     content: '';
     position: absolute;
-    top: 12px; /* Alinhado com o centro do número */
-    left: calc(50% + 100px); /* Ajustar conforme o gap */
-    width: calc(100% - 140px); /* Ajustar conforme o gap e tamanho do card */
-    max-width: 150px; /* Limite para não ficar muito longo */
+    top: 12px;
+    left: calc(50% + 100px); 
+    width: calc(100% - 140px); 
+    max-width: 150px;
     height: 2px;
     background: var(--border-color-strong);
     z-index: -1;
   }
 }
 
-
-/* CTA Section */
 .cta-content {
   background: var(--dark-bg-lighter);
   border-radius: var(--border-radius-lg);
@@ -448,14 +439,14 @@ body {
 
 .cta-content h2 {
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(1.75rem, 4vw, 2.25rem); /* 36px */
+  font-size: clamp(1.75rem, 4vw, 2.25rem); 
   font-weight: 700;
   margin-bottom: 16px;
   color: var(--text-primary);
 }
 
 .cta-content p {
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem; 
   color: var(--text-secondary);
   margin-bottom: 32px;
   max-width: 600px;
@@ -470,9 +461,8 @@ body {
   flex-wrap: wrap;
 }
 
-/* Footer */
 .landing-footer {
-  background: var(--dark-bg-lighter); /* Fundo do footer um pouco diferente */
+  background: var(--dark-bg-lighter); 
   padding: 60px 24px 24px;
   border-top: 1px solid var(--border-color-strong);
 }
@@ -488,17 +478,17 @@ body {
 
 .footer-column h4 {
   font-family: 'Poppins', sans-serif;
-  font-size: 1rem; /* 16px */
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
 }
 
 .footer-link {
-  display: block; /* Links em bloco para melhor clique */
+  display: block; 
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem; 
   margin-bottom: 10px;
   transition: var(--transition);
   background: none;
@@ -518,7 +508,7 @@ body {
 
 .footer-brand p {
   color: var(--text-muted);
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem; 
   margin-top: 12px;
 }
 
@@ -529,13 +519,12 @@ body {
 }
 .footer-bottom p {
   color: var(--text-muted);
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.875rem; 
 }
 
-/* Scroll Indicator (opcional, se mantido) */
 .scroll-indicator {
   position: absolute;
-  bottom: 40px; /* Posicionado dentro do padding-bottom da hero-section */
+  bottom: 40px; 
   left: 50%;
   transform: translateX(-50%);
   background: none;
@@ -563,7 +552,6 @@ body {
   50% { transform: translateX(-50%) translateY(-6px); }
 }
 
-/* Responsividade */
 @media (max-width: 992px) {
   .hero-content {
     grid-template-columns: 1fr;
@@ -576,10 +564,9 @@ body {
   }
   .hero-buttons {
     justify-content: center;
-    /* margin-bottom: 20px; */ /* Removido - vamos controlar com padding da seção */
   }
   .hero-visual {
-    order: -1; /* Imagem/visual acima do texto em mobile */
+    order: -1; 
     margin-bottom: 30px;
   }
   .hero-image-placeholder {
@@ -587,13 +574,13 @@ body {
     height: 300px;
   }
   .hero-section {
-    padding-bottom: 120px; /* Aumentar padding para acomodar o indicador e o conteúdo */
+    padding-bottom: 120px; 
   }
 }
 
 @media (max-width: 768px) {
   html {
-    font-size: 15px; /* Ajuste base para telas menores */
+    font-size: 15px; 
   }
   .landing-header {
     padding: 0 16px;
@@ -624,10 +611,10 @@ body {
   }
 
   .steps-container {
-    grid-template-columns: 1fr; /* Passos em coluna única */
-    gap: 50px; /* Espaço maior com o número acima */
+    grid-template-columns: 1fr; 
+    gap: 50px; 
   }
-  .step-card:not(:last-child)::after { /* Remover conectores em mobile */
+  .step-card:not(:last-child)::after { 
     display: none;
   }
 
@@ -635,7 +622,7 @@ body {
     padding: 40px 24px;
   }
   .footer-content {
-    grid-template-columns: 1fr; /* Colunas do footer empilhadas */
+    grid-template-columns: 1fr; 
     text-align: center;
   }
   .footer-column {
@@ -649,7 +636,7 @@ body {
     padding-left: 0;
   }
   .hero-section {
-    padding-bottom: 140px; /* Aumentar mais o padding para telas médias */
+    padding-bottom: 140px; 
   }
 }
 
@@ -666,7 +653,6 @@ body {
     max-width: 320px;
     margin-left: auto;
     margin-right: auto;
-    /* margin-bottom: 30px; */ /* Removido */
   }
   .hero-button {
     width: 100%;
@@ -680,14 +666,13 @@ body {
     flex-direction: column;
   }
   .hero-section {
-    padding-bottom: 160px; /* Padding ainda maior para acomodar botões empilhados e indicador */
+    padding-bottom: 160px; 
   }
   .scroll-indicator {
-    bottom: 30px; /* Opcionalmente, ajustar um pouco se o padding for muito grande */
+    bottom: 30px; 
   }
 }
 
-/* Estados de Foco para Acessibilidade */
 .nav-link:focus-visible,
 .nav-button:focus-visible,
 .hero-button:focus-visible,

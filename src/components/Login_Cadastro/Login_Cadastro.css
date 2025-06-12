@@ -22,7 +22,7 @@ body {
     padding: 40px 16px;
     box-sizing: border-box;
     background: linear-gradient(135deg, #333333, #555555);
-    gap: 30px; /* Espaço entre o cabeçalho e o container de login */
+    gap: 30px; 
 }
 
 .container {
@@ -524,9 +524,6 @@ body {
     margin: 0;
 }
 
-/* Adicione estes estilos ao final do arquivo */
-
-/* Estilos para o cabeçalho com logo e título */
 .app-header {
     display: flex;
     align-items: center;
@@ -543,7 +540,6 @@ body {
     margin-right: 15px;
 }
 
-/* Estilos para a imagem logo */
 .logo-image {
     width: 60px;
     height: auto;
@@ -561,7 +557,6 @@ body {
     letter-spacing: -0.02em;
 }
 
-/* Ajustes responsivos para o cabeçalho */
 @media (max-width: 480px) {
     .page-container {
         gap: 20px;
@@ -586,7 +581,6 @@ body {
     }
 }
 
-/* Ajustar o tamanho do título "Acesse o sistema" para não competir com o novo título */
 .container form h1 {
     font-size: 22px;
     margin-top: 5px;
@@ -612,7 +606,6 @@ body {
     }
 }
 
-/* Garante centralização e evita corte lateral em telas pequenas */
 @media (max-width: 480px) {
     .page-container {
         padding: 16px 0 !important;
@@ -628,7 +621,6 @@ body {
     }
 }
 
-/* Para telas muito pequenas */
 @media (max-width: 350px) {
     .container {
         padding: 8px !important;
@@ -647,32 +639,29 @@ body {
   text-align: left;
 }
 
-/* Estilos para dispositivos móveis */
 @media (max-width: 480px) {
   .input-field-group {
     margin-bottom: 12px;
   }
 }
 
-/* Adicione ou modifique os estilos para os campos de horário */
-
 .time-input-container {
     display: flex;
-    flex-direction: column; /* Empilha os grupos de entrada e saída */
-    gap: 20px; /* Espaço entre os grupos de entrada e saída */
+    flex-direction: column; 
+    gap: 20px;
     margin-bottom: 20px;
-    margin-right: 20px; /* Mantém o mesmo recuo dos outros campos */
+    margin-right: 20px; 
 }
 
 .time-input-group {
     display: flex;
     flex-direction: column;
-    text-align: left; /* Alinha o label à esquerda */
+    text-align: left; 
 }
 
 .time-input-group label {
-    font-size: 14px; /* Tamanho similar aos placeholders */
-    color: rgba(255, 255, 255, 0.8); /* Cor suave, mas legível */
+    font-size: 14px; 
+    color: rgba(255, 255, 255, 0.8); 
     margin-bottom: 8px;
     font-weight: var(--font-weight-regular);
 }
@@ -684,7 +673,7 @@ body {
 }
 
 .time-input-field {
-    position: relative; /* Para o ícone */
+    position: relative; 
     width: 100%;
     display: flex;
     align-items: center;
@@ -766,17 +755,16 @@ body {
     text-transform: uppercase;
 }
 
-/* Ajustes responsivos para os campos de horário */
 @media (max-width: 480px) {
     .time-input-container {
-        margin-right: 0; /* Remove o recuo em telas menores se necessário */
+        margin-right: 0; 
         gap: 15px;
     }
 
     .time-input-field input[type="text"] {
         font-size: 14px;
         padding: 12px;
-        padding-right: 40px; /* Ajusta o padding para o ícone */
+        padding-right: 40px; 
     }
 
     .time-input-field .time-icon {
@@ -789,7 +777,6 @@ body {
     }
 }
 
-/* Estilos para os horários semanais */
 .horarios-semana-container {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -878,7 +865,6 @@ body {
     color: rgba(255, 255, 255, 0.7);
 }
 
-/* Ajustes responsivos */
 @media (max-width: 600px) {
     .horarios-container {
         flex-direction: column;
@@ -893,15 +879,11 @@ body {
     }
 }
 
-/* Adicione estes novos estilos ao final do seu arquivo CSS */
-
-/* Estilos para o novo formulário de cadastro em etapas */
 .cadastro-container {
   max-width: 520px;
   padding-top: 20px;
 }
 
-/* Sistema de etapas */
 .etapas-container {
   display: flex;
   align-items: center;
@@ -968,7 +950,6 @@ body {
   color: #4CAF50;
 }
 
-/* Animações para transições */
 .fade-in {
   animation: fadeInAnimation 0.4s ease forwards;
 }
@@ -984,12 +965,10 @@ body {
   }
 }
 
-/* Área de conteúdo de cada etapa */
 .etapa-conteudo {
   padding: 5px;
 }
 
-/* Botões de navegação */
 .botoes-navegacao {
   display: flex;
   justify-content: space-between;
@@ -1039,7 +1018,6 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Estilos para a etapa de upload de foto */
 .foto-upload-container {
   display: flex;
   flex-direction: column;
@@ -1172,52 +1150,49 @@ body {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Estilos para a etapa de horários */
 .horarios-config-container {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  overflow: hidden; /* Crucial for containing children */
+  overflow: hidden; 
 }
 
 .horarios-tabs {
   display: flex;
   width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Line separating tabs from content below */
-  overflow: hidden; /* Ensures tabs themselves don't break out */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+  overflow: hidden; 
 }
 
 .horario-tab {
-  flex: 1; /* Each tab takes equal space */
-  background: transparent; /* Inactive tabs are transparent */
+  flex: 1;
+  background: transparent; 
   border: none;
-  /* Bottom border for active state indication, transparent for inactive */
   border-bottom: 3px solid transparent; 
-  color: rgba(255, 255, 255, 0.7); /* Subdued color for inactive text */
+  color: rgba(255, 255, 255, 0.7); 
   padding: 12px 8px;
   cursor: pointer;
   font-size: 15px;
-  font-weight: 500; /* Regular weight for inactive tabs */
+  font-weight: 500; 
   text-align: center;
   white-space: nowrap;
-  overflow: hidden; /* Prevents text from overflowing the button */
+  overflow: hidden; 
   text-overflow: ellipsis;
   position: relative;
   transition: background-color 0.2s ease, color 0.2s ease, border-bottom-color 0.2s ease;
 }
 
 .horario-tab.ativo {
-  background: rgba(255, 255, 255, 0.08); /* Slightly lighter background for active tab */
-  color: #f5a623; /* Brand color for active tab text */
-  font-weight: 600; /* Bolder text for active tab */
-  border-bottom-color: #f5a623; /* Brand color for the bottom border indicator */
+  background: rgba(255, 255, 255, 0.08); 
+  color: #f5a623; 
+  font-weight: 600; 
+  border-bottom-color: #f5a623; 
 }
 
 .horario-tab:hover:not(.ativo) {
-  background: rgba(255, 255, 255, 0.04); /* Subtle hover background for inactive tabs */
-  color: #ffffff; /* Brighter text on hover for inactive tabs */
+  background: rgba(255, 255, 255, 0.04); 
+  color: #ffffff;
 }
 
-/* Ajustes responsivos para os botões */
 @media (max-width: 480px) {
   .horario-tab {
     padding: 10px 5px;
@@ -1256,7 +1231,6 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Switch toggle */
 .switch {
   position: relative;
   display: inline-block;
@@ -1449,7 +1423,6 @@ input:checked + .slider-mini:before {
   white-space: nowrap;
 }
 
-/* Responsividade */
 @media (max-width: 520px) {
   .horario-inputs {
     flex-direction: column;

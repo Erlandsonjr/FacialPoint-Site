@@ -1,12 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  FaSignInAlt, FaRocket, FaQuestionCircle, FaFingerprint,
-  FaDesktop, FaChartLine, FaShieldAlt, FaAngleDown,
-  FaGithub, FaEnvelope, FaArrowRight, FaLock, 
-  FaUserCircle, FaUsers, FaCogs, FaCameraRetro, FaClipboardList
-} from 'react-icons/fa';
-import './HomePage.css';
+  FaSignInAlt,
+  FaRocket,
+  FaQuestionCircle,
+  FaFingerprint,
+  FaDesktop,
+  FaChartLine,
+  FaShieldAlt,
+  FaAngleDown,
+  FaGithub,
+  FaEnvelope,
+  FaArrowRight,
+  FaLock,
+  FaUserCircle,
+  FaUsers,
+  FaCogs,
+  FaCameraRetro,
+  FaClipboardList,
+} from "react-icons/fa";
+import "./HomePage.css";
 
 function HomePage() {
   const [scrolled, setScrolled] = useState(false);
@@ -16,30 +29,27 @@ function HomePage() {
       setScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Verificar estado inicial
-    
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
-  // Versão alternativa da função scrollToSection:
   const scrollToSection = (id) => {
     console.log(`Tentando rolar para ${id}`);
-    
+
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
         console.log(`Elemento encontrado: ${id}`);
-        
-        // Método alternativo de rolagem
-        element.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
+
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
         });
-        
-        // Compensar o header após a rolagem
+
         setTimeout(() => {
           window.scrollBy(0, -80);
         }, 100);
@@ -51,35 +61,43 @@ function HomePage() {
 
   return (
     <div className="landing-container">
-      {/* Header */}
-      <header className={`landing-header ${scrolled ? 'scrolled' : ''}`}>
+      <header className={`landing-header ${scrolled ? "scrolled" : ""}`}>
         <div className="header-content">
           <Link to="/" className="logo-container">
             <img src="/logo.png" alt="FacePonto Logo" className="logo-image" />
             <h1 className="logo-title">FacePonto</h1>
           </Link>
           <nav className="header-nav">
-            {/* Corrigido: onClick agora chama a função scrollToSection corretamente */}
-            <button onClick={() => scrollToSection('features')} className="nav-link">
+            <button
+              onClick={() => scrollToSection("features")}
+              className="nav-link"
+            >
               Recursos
             </button>
-            <button onClick={() => scrollToSection('how-it-works')} className="nav-link">
+            <button
+              onClick={() => scrollToSection("how-it-works")}
+              className="nav-link"
+            >
               Como Funciona
             </button>
             <Link to="/login" className="nav-button">
-              <FaSignInAlt style={{ marginRight: '8px' }} /> Acessar Sistema
+              <FaSignInAlt style={{ marginRight: "8px" }} /> Acessar Sistema
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="hero-section section">
         <div className="section-container hero-content">
           <div className="hero-text">
-            <h1>Controle de Ponto <span className="highlight">Inteligente</span> e <span className="highlight">Seguro</span></h1>
+            <h1>
+              Controle de Ponto <span className="highlight">Inteligente</span> e{" "}
+              <span className="highlight">Seguro</span>
+            </h1>
             <p className="subtitle">
-              Modernize a gestão de presença da sua empresa com nossa solução avançada de reconhecimento facial. Precisão, segurança e facilidade em um só lugar.
+              Modernize a gestão de presença da sua empresa com nossa solução
+              avançada de reconhecimento facial. Precisão, segurança e
+              facilidade em um só lugar.
             </p>
             <div className="hero-buttons">
               <Link to="/registro" className="hero-button primary">
@@ -91,7 +109,6 @@ function HomePage() {
             </div>
           </div>
           <div className="hero-visual">
-            {/* Idealmente, substitua por uma imagem ou ilustração mais elaborada */}
             <div className="hero-image-placeholder">
               <FaCameraRetro />
             </div>
@@ -99,7 +116,7 @@ function HomePage() {
         </div>
         <button
           className="scroll-indicator"
-          onClick={() => scrollToSection('features')}
+          onClick={() => scrollToSection("features")}
           aria-label="Rolar para próxima seção"
         >
           <span>Descubra Mais</span>
@@ -107,47 +124,68 @@ function HomePage() {
         </button>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="section">
         <div className="section-container">
           <div className="section-header">
             <h2>Recursos que Transformam sua Gestão</h2>
-            <p>Descubra como o FacePonto simplifica e otimiza o controle de ponto na sua empresa.</p>
+            <p>
+              Descubra como o FacePonto simplifica e otimiza o controle de ponto
+              na sua empresa.
+            </p>
           </div>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon-wrapper"><FaFingerprint /></div>
+              <div className="feature-icon-wrapper">
+                <FaFingerprint />
+              </div>
               <div>
                 <h3>Precisão Biométrica</h3>
-                <p>Reconhecimento facial de alta acurácia para identificação inequívoca dos colaboradores.</p>
+                <p>
+                  Reconhecimento facial de alta acurácia para identificação
+                  inequívoca dos colaboradores.
+                </p>
               </div>
             </div>
             <div className="feature-card">
-              <div className="feature-icon-wrapper"><FaDesktop /></div>
+              <div className="feature-icon-wrapper">
+                <FaDesktop />
+              </div>
               <div>
                 <h3>Quiosque Dedicado</h3>
-                <p>Interface intuitiva no terminal de ponto, facilitando o registro rápido e sem contato.</p>
+                <p>
+                  Interface intuitiva no terminal de ponto, facilitando o
+                  registro rápido e sem contato.
+                </p>
               </div>
             </div>
             <div className="feature-card">
-              <div className="feature-icon-wrapper"><FaChartLine /></div>
+              <div className="feature-icon-wrapper">
+                <FaChartLine />
+              </div>
               <div>
                 <h3>Dashboard Completo</h3>
-                <p>Acompanhe registros, gere relatórios e gerencie usuários de forma centralizada e eficiente.</p>
+                <p>
+                  Acompanhe registros, gere relatórios e gerencie usuários de
+                  forma centralizada e eficiente.
+                </p>
               </div>
             </div>
             <div className="feature-card">
-              <div className="feature-icon-wrapper"><FaShieldAlt /></div>
+              <div className="feature-icon-wrapper">
+                <FaShieldAlt />
+              </div>
               <div>
                 <h3>Segurança de Dados</h3>
-                <p>Proteção robusta das informações biométricas e registros, em conformidade com as normas.</p>
+                <p>
+                  Proteção robusta das informações biométricas e registros, em
+                  conformidade com as normas.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it Works Section */}
       <section id="how-it-works" className="section">
         <div className="section-container">
           <div className="section-header">
@@ -157,29 +195,49 @@ function HomePage() {
           <div className="steps-container">
             <div className="step-card">
               <div className="step-number">1</div>
-              <h3><FaCogs style={{ marginRight: '8px' }} />Cadastro e Configuração</h3>
-              <p>Administradores cadastram colaboradores e configuram o sistema de forma rápida e segura.</p>
+              <h3>
+                <FaCogs style={{ marginRight: "8px" }} />
+                Cadastro e Configuração
+              </h3>
+              <p>
+                Administradores cadastram colaboradores e configuram o sistema
+                de forma rápida e segura.
+              </p>
             </div>
             <div className="step-card">
               <div className="step-number">2</div>
-              <h3><FaCameraRetro style={{ marginRight: '8px' }} />Registro no Quiosque</h3>
-              <p>Colaboradores registram o ponto simplesmente olhando para o quiosque. Rápido e sem atritos.</p>
+              <h3>
+                <FaCameraRetro style={{ marginRight: "8px" }} />
+                Registro no Quiosque
+              </h3>
+              <p>
+                Colaboradores registram o ponto simplesmente olhando para o
+                quiosque. Rápido e sem atritos.
+              </p>
             </div>
             <div className="step-card">
               <div className="step-number">3</div>
-              <h3><FaClipboardList style={{ marginRight: '8px' }} />Acompanhamento Online</h3>
-              <p>Acesso individual ao dashboard para consulta de horários e histórico de presença detalhado.</p>
+              <h3>
+                <FaClipboardList style={{ marginRight: "8px" }} />
+                Acompanhamento Online
+              </h3>
+              <p>
+                Acesso individual ao dashboard para consulta de horários e
+                histórico de presença detalhado.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section id="cta" className="section">
         <div className="section-container">
           <div className="cta-content">
             <h2>Pronto para Revolucionar seu Controle de Ponto?</h2>
-            <p>Experimente a eficiência e segurança do FacePonto. Acesse sua área ou entre em contato para mais informações.</p>
+            <p>
+              Experimente a eficiência e segurança do FacePonto. Acesse sua área
+              ou entre em contato para mais informações.
+            </p>
             <div className="cta-button-group">
               <Link to="/registro" className="hero-button primary">
                 <FaLock /> Acesso Administrativo
@@ -192,30 +250,63 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-column footer-brand">
-            <Link to="/" className="logo-container" style={{ marginBottom: '16px' }}>
-              <img src="/logo.png" alt="FacePonto Logo" className="logo-image" />
+            <Link
+              to="/"
+              className="logo-container"
+              style={{ marginBottom: "16px" }}
+            >
+              <img
+                src="/logo.png"
+                alt="FacePonto Logo"
+                className="logo-image"
+              />
               <h1 className="logo-title">FacePonto</h1>
             </Link>
             <p>Simplificando o controle de presença com tecnologia de ponta.</p>
           </div>
           <div className="footer-column">
             <h4>Navegação Rápida</h4>
-            <button onClick={() => scrollToSection('features')} className="footer-link">Recursos</button>
-            <button onClick={() => scrollToSection('how-it-works')} className="footer-link">Como Funciona</button>
-            <Link to="/login" className="footer-link">Acessar Sistema</Link>
+            <button
+              onClick={() => scrollToSection("features")}
+              className="footer-link"
+            >
+              Recursos
+            </button>
+            <button
+              onClick={() => scrollToSection("how-it-works")}
+              className="footer-link"
+            >
+              Como Funciona
+            </button>
+            <Link to="/login" className="footer-link">
+              Acessar Sistema
+            </Link>
           </div>
           <div className="footer-column">
             <h4>Contato</h4>
-            <a href="mailto:contato@faceponto.com.br" className="footer-link"><FaEnvelope />contato@faceponto.com.br</a>
-            <a href="https://github.com/seu-usuario/faceponto-repo" target="_blank" rel="noopener noreferrer" className="footer-link"><FaGithub />Projeto no GitHub</a>
+            <a href="mailto:contato@faceponto.com.br" className="footer-link">
+              <FaEnvelope />
+              contato@faceponto.com.br
+            </a>
+            <a
+              href="https://github.com/seu-usuario/faceponto-repo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
+              <FaGithub />
+              Projeto no GitHub
+            </a>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} FacePonto. Todos os direitos reservados.</p>
+          <p>
+            &copy; {new Date().getFullYear()} FacePonto. Todos os direitos
+            reservados.
+          </p>
         </div>
       </footer>
     </div>

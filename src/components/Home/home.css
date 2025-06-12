@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Tema escuro alinhado com o resto da aplicação */
     --bg-primary: #141414;
     --bg-secondary: #1a1a1a;
     --card-bg: rgba(35, 35, 35, 0.8);
@@ -178,7 +177,6 @@ body {
     margin-top: var(--spacing-xs);
 }
 
-/* Status Card */
 .status-card {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -299,7 +297,6 @@ body {
     font-weight: var(--font-weight-medium);
 }
 
-/* Dashboard Grid */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -350,7 +347,7 @@ body {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* MUDANÇA: 2 colunas ao invés de 4 */
+    grid-template-columns: repeat(2, 1fr); 
     gap: var(--spacing-md);
     width: 100%;
 }
@@ -464,7 +461,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* Estilo para dia de folga */
 .status-indicator.dia-folga {
     border-left: 4px solid var(--success);
     background: rgba(46, 204, 113, 0.08);
@@ -474,7 +470,6 @@ body {
     color: var(--success);
 }
 
-/* Mensagem especial para dia de folga */
 .folga-message {
     text-align: center;
     padding: var(--spacing-lg);
@@ -490,7 +485,6 @@ body {
     font-weight: var(--font-weight-medium);
 }
 
-/* Responsividade */
 @media (max-width: 1024px) {
     .status-card,
     .dashboard-grid {
@@ -537,7 +531,7 @@ body {
     }
     
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr); /* Manter 2 colunas em tablet */
+        grid-template-columns: repeat(2, 1fr); 
     }
 }
 
@@ -574,7 +568,7 @@ body {
     }
     
     .stats-grid {
-        grid-template-columns: 1fr; /* 1 coluna apenas em mobile */
+        grid-template-columns: 1fr; 
     }
     
     .chart-wrapper {
