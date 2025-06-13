@@ -156,7 +156,7 @@
     color: var(--text-primary);
 }
 
-.register-point-button {
+.admin-singup-button {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     border: none;
     border-radius: 30px;
@@ -172,7 +172,7 @@
     box-shadow: var(--shadow-sm);
 }
 
-.register-point-button:hover {
+.admin-singup-button:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }

@@ -28,6 +28,7 @@ function RegistroPonto() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [tipoRegistroAtual, setTipoRegistroAtual] = useState("");
+  const [componenteAtivo, setComponenteAtivo] = useState(true);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -36,17 +37,85 @@ function RegistroPonto() {
   const standbyTimerRef = useRef(null);
   const detectionRef = useRef(null);
   const streamRef = useRef(null);
+  const componenteMontadoRef = useRef(true);
+
+  const pararTodasCameras = () => {
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          if (track) {
+            track.stop();
+            track.enabled = false;
+          }
+        });
+        streamRef.current = null;
+      }
+
+      if (stream) {
+        stream.getTracks().forEach(track => {
+          if (track) {
+            track.stop();
+            track.enabled = false;
+          }
+        });
+      }
+
+      if (window.streamRef) {
+        if (window.streamRef.getTracks) {
+          window.streamRef.getTracks().forEach(track => {
+            if (track) {
+              track.stop();
+              track.enabled = false;
+            }
+          });
+        }
+        window.streamRef = null;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+        videoRef.current.src = "";
+        videoRef.current.load();
+      }
+
+      setStream(null);
+
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        devices.forEach(device => {
+          if (device.kind === 'videoinput') {
+            navigator.mediaDevices.getUserMedia({
+              video: { deviceId: device.deviceId }
+            }).then(stream => {
+              stream.getTracks().forEach(track => track.stop());
+            }).catch(() => {});
+          }
+        });
+      }).catch(() => {});
+
+    } catch (error) {
+      console.error("Erro ao parar câmeras:", error);
+    }
+  };
 
   useEffect(() => {
+    componenteMontadoRef.current = true;
+    
     const inicializacao = async () => {
       setCarregando(true);
       try {
         await carregarModelosFaciais();
         await fetchServerTime();
-        await iniciarCamera();
-        setModoQuiosque("detectando");
+        if (componenteMontadoRef.current) {
+          await iniciarCamera();
+          setModoQuiosque("detectando");
+        }
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("beforeunload", pararTodasCameras);
+        window.addEventListener("pagehide", pararTodasCameras);
+        window.addEventListener("unload", pararTodasCameras);
+        
       } catch (error) {
         setErro(
           "Erro ao inicializar o sistema. Por favor, recarregue a página."
@@ -56,43 +125,51 @@ function RegistroPonto() {
       }
     };
 
+    setComponenteAtivo(true);
     inicializacao();
 
     return () => {
-      pararCameraAoSair();
+      componenteMontadoRef.current = false;
+      setComponenteAtivo(false);
+      
+      pararTodasCameras();
       limparTodosTimers();
+      
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", pararTodasCameras);
+      window.removeEventListener("pagehide", pararTodasCameras);
+      window.removeEventListener("unload", pararTodasCameras);
     };
   }, []);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (!componenteMontadoRef.current) {
+        pararTodasCameras();
+        clearInterval(intervalId);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const handleVisibilityChange = () => {
-    if (document.visibilityState === "visible") {
-      console.log("Guia voltou ao foco, reiniciando câmera e detecção");
-
-      if (
-        videoRef.current &&
-        videoRef.current.paused &&
-        videoRef.current.srcObject
-      ) {
-        videoRef.current.play().catch((err) => {
-          console.log("Erro ao retomar vídeo:", err);
-          setTimeout(() => {
-            pararCamera();
-            iniciarCamera().then(() => {
-              if (modoQuiosque === "detectando" || modoQuiosque === "standby") {
-                iniciarDeteccaoFacial();
-              }
-            });
-          }, 300);
-        });
+    if (document.visibilityState === "hidden") {
+      pararTodasCameras();
+      if (detectionRef.current) {
+        clearInterval(detectionRef.current);
+        detectionRef.current = null;
       }
-
-      if (
-        (modoQuiosque === "detectando" || modoQuiosque === "standby") &&
-        !detectionRef.current
-      ) {
-        iniciarDeteccaoFacial();
-      }
+    } else if (document.visibilityState === "visible" && componenteAtivo && componenteMontadoRef.current) {
+      setTimeout(() => {
+        if (componenteMontadoRef.current && componenteAtivo) {
+          iniciarCamera().then(() => {
+            if (modoQuiosque === "detectando" || modoQuiosque === "standby") {
+              iniciarDeteccaoFacial();
+            }
+          });
+        }
+      }, 500);
     }
   };
 
@@ -156,6 +233,8 @@ function RegistroPonto() {
     let localTime = serverTime || new Date();
 
     const syncWithServer = async () => {
+      if (!componenteAtivo || !componenteMontadoRef.current) return;
+      
       try {
         const timeResponse = await fetch(
           `https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia?t=${Date.now()}`
@@ -200,6 +279,12 @@ function RegistroPonto() {
     };
 
     const updateLocalTime = () => {
+      if (!componenteAtivo || !componenteMontadoRef.current) {
+        clearInterval(localTimer);
+        clearInterval(syncTimer);
+        return;
+      }
+      
       if (localTime) {
         localTime = new Date(localTime.getTime() + 1000);
         setServerTime(new Date(localTime));
@@ -235,6 +320,8 @@ function RegistroPonto() {
   };
 
   useEffect(() => {
+    if (!componenteMontadoRef.current || !componenteAtivo) return;
+
     if (
       modoQuiosque === "contagem" ||
       modoQuiosque === "processando" ||
@@ -246,7 +333,7 @@ function RegistroPonto() {
       }
     }
 
-    if (modoQuiosque === "detectando") {
+    if (modoQuiosque === "detectando" && componenteAtivo) {
       iniciarDeteccaoFacial();
       iniciarTimerStandby();
     } else if (modoQuiosque === "contagem") {
@@ -264,7 +351,7 @@ function RegistroPonto() {
     }
 
     standbyTimerRef.current = setTimeout(() => {
-      if (modoQuiosque === "detectando") {
+      if (modoQuiosque === "detectando" && componenteAtivo && componenteMontadoRef.current) {
         setModoQuiosque("standby");
       }
     }, 20000);
@@ -277,9 +364,12 @@ function RegistroPonto() {
   }, [contadorTempo, modoQuiosque]);
 
   const iniciarCamera = async () => {
+    if (!componenteMontadoRef.current || !componenteAtivo) return false;
+
     try {
       setErro("");
-      pararCamera();
+      pararTodasCameras();
+      
       const constraints = {
         video: {
           width: { ideal: 640 },
@@ -289,34 +379,51 @@ function RegistroPonto() {
         audio: false,
       };
 
-      const streamCamera = await navigator.mediaDevices.getUserMedia(
-        constraints
-      );
+      const streamCamera = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      if (!componenteMontadoRef.current || !componenteAtivo) {
+        if (streamCamera) {
+          streamCamera.getTracks().forEach(track => track.stop());
+        }
+        return false;
+      }
+      
       setStream(streamCamera);
       streamRef.current = streamCamera;
-      setPermissaoCamera("concedida");
+      window.streamRef = streamCamera;
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (videoRef.current && componenteMontadoRef.current) {
         videoRef.current.srcObject = streamCamera;
         return new Promise((resolve) => {
           videoRef.current.onloadedmetadata = () => {
+            if (!componenteMontadoRef.current || !componenteAtivo) {
+              pararTodasCameras();
+              resolve(false);
+              return;
+            }
+            
             videoRef.current
               .play()
               .then(() => {
-                if (videoRef.current.paused) {
+                if (videoRef.current && videoRef.current.paused) {
                   videoRef.current.play().catch((e) => {});
                 }
-                setTimeout(resolve, 1000);
+                setTimeout(resolve, 1000, true);
               })
               .catch((err) => {
-                resolve();
+                resolve(false);
               });
           };
           setTimeout(() => {
+            if (!componenteMontadoRef.current || !componenteAtivo) {
+              pararTodasCameras();
+              resolve(false);
+              return;
+            }
+            
             if (videoRef.current && !videoRef.current.onloadedmetadata) {
               videoRef.current.play().catch((e) => {});
-              resolve();
+              resolve(true);
             }
           }, 2000);
         });
@@ -333,26 +440,19 @@ function RegistroPonto() {
   };
 
   const pararCamera = () => {
-    const currentStream = streamRef.current || stream;
-    if (currentStream) {
-      currentStream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-      streamRef.current = null;
-    }
+    pararTodasCameras();
   };
 
   const pararCameraAoSair = () => {
-    const currentStream = streamRef.current || stream;
-    if (currentStream) {
-      currentStream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-      streamRef.current = null;
+    pararTodasCameras();
+    if (detectionRef.current) {
+      clearInterval(detectionRef.current);
+      detectionRef.current = null;
     }
   };
 
   const iniciarDeteccaoFacial = () => {
-    if (!videoRef.current || !modelsLoaded) {
-      console.log("Vídeo ou modelos não disponíveis");
+    if (!videoRef.current || !modelsLoaded || !componenteAtivo || !componenteMontadoRef.current) {
       return;
     }
 
@@ -362,9 +462,10 @@ function RegistroPonto() {
         .getTracks()
         .some((track) => !track.enabled || track.readyState !== "live")
     ) {
-      console.log("Stream inativo, reiniciando câmera");
       iniciarCamera().then(() => {
-        setTimeout(iniciarDeteccaoFacial, 500);
+        if (componenteAtivo && componenteMontadoRef.current) {
+          setTimeout(iniciarDeteccaoFacial, 500);
+        }
       });
       return;
     }
@@ -386,12 +487,18 @@ function RegistroPonto() {
       videoRef.current.paused &&
       videoRef.current.srcObject
     ) {
-      videoRef.current.play().catch((err) => {
-        console.log("Erro ao tentar reproduzir vídeo:", err);
-      });
+      videoRef.current.play().catch((err) => {});
     }
 
     detectionRef.current = setInterval(async () => {
+      if (!componenteAtivo || !componenteMontadoRef.current) {
+        if (detectionRef.current) {
+          clearInterval(detectionRef.current);
+          detectionRef.current = null;
+        }
+        return;
+      }
+      
       if (modoQuiosque !== "detectando" && modoQuiosque !== "standby") {
         return;
       }
@@ -450,12 +557,16 @@ function RegistroPonto() {
     }
     setContadorTempo(3);
     setTimeout(() => {
+      if (!componenteAtivo || !componenteMontadoRef.current) return;
       setContadorTempo(2);
       setTimeout(() => {
+        if (!componenteAtivo || !componenteMontadoRef.current) return;
         setContadorTempo(1);
         setTimeout(() => {
+          if (!componenteAtivo || !componenteMontadoRef.current) return;
           setContadorTempo(0);
           setTimeout(() => {
+            if (!componenteAtivo || !componenteMontadoRef.current) return;
             tirarFoto();
           }, 200);
         }, 1000);
@@ -532,9 +643,6 @@ function RegistroPonto() {
         return;
       }
 
-      console.log("Iniciando processo de reconhecimento facial");
-
-      console.log("Obtendo lista de usuários...");
       const usuariosResponse = await fetch(
         "https://faceponto-banco-dados-production.up.railway.app/public/usuarios/codificacoes",
         {
@@ -552,7 +660,6 @@ function RegistroPonto() {
       }
 
       const usuariosData1 = await usuariosResponse.json();
-      console.log(`${usuariosData1.length} usuários encontrados.`);
 
       if (!usuariosData1 || usuariosData1.length === 0) {
         throw new Error("Nenhum usuário cadastrado no sistema.");
@@ -580,11 +687,7 @@ function RegistroPonto() {
 
               usuariosMap[usuario.id] = usuario;
             }
-          } catch (error) {
-            console.warn(
-              `Codificação inválida para usuário ${usuario.id}: ${error.message}`
-            );
-          }
+          } catch (error) {}
         }
       });
 
@@ -592,11 +695,6 @@ function RegistroPonto() {
         throw new Error("Nenhum usuário tem codificação facial cadastrada.");
       }
 
-      console.log(
-        `${todasCodificacoes.length} codificações faciais válidas encontradas.`
-      );
-
-      console.log("Enviando para reconhecimento facial...");
       const formData = new FormData();
 
       const otimizarImagem = async (blob) => {
@@ -642,35 +740,15 @@ function RegistroPonto() {
         if (typeof encodingArray === "string") {
           try {
             encodingArray = JSON.parse(encodingArray);
-          } catch (err) {
-            console.warn(`Erro ao parsear codificação: ${err.message}`);
-          }
+          } catch (err) {}
         }
 
         if (Array.isArray(encodingArray)) {
           encodingArray.forEach((valor, idx) => {
             formData.append(`codificacao_${item.userId}_${idx}`, valor);
           });
-          console.log(
-            `Enviado ${encodingArray.length} elementos para usuário ${item.userId}`
-          );
-        } else {
-          console.warn(`Codificação inválida para usuário ${item.userId}`);
         }
       });
-
-      console.log("Enviando codificações para reconhecimento:");
-      todasCodificacoes.forEach((item) => {
-        console.log(
-          `Usuário ${item.userId}: ${typeof item.codificacao}`,
-          Array.isArray(item.codificacao)
-            ? `Array com ${item.codificacao.length} elementos`
-            : item.codificacao
-        );
-      });
-
-      const formEntries = [...formData.entries()];
-      console.log("Entradas do FormData:", formEntries.slice(0, 10));
 
       const verificacaoResponse = await axios.post(
         "https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer-multiplos/",
@@ -680,11 +758,6 @@ function RegistroPonto() {
             "Content-Type": "multipart/form-data",
           },
         }
-      );
-
-      console.log(
-        "Resposta do reconhecimento facial:",
-        verificacaoResponse.data
       );
 
       if (
@@ -703,10 +776,8 @@ function RegistroPonto() {
         throw new Error("Usuário correspondente não encontrado no sistema.");
       }
 
-      console.log("Obtendo dados completos do usuário reconhecido...");
       setUsuarioReconhecido(usuarioReconhecido.nome);
 
-      console.log("Obtendo horário de trabalho usando novo endpoint...");
       const horarioResponse = await fetch(
         `https://faceponto-banco-dados-production.up.railway.app/public/usuarios/${usuarioReconhecidoId}/horario`,
         {
@@ -732,7 +803,6 @@ function RegistroPonto() {
       }
 
       const horarioTrabalho = await horarioResponse.json();
-      console.log("Horário de trabalho obtido com sucesso:", horarioTrabalho);
 
       const dataAtual = serverTime ? new Date(serverTime) : new Date();
       const diasSemana = [
@@ -745,8 +815,6 @@ function RegistroPonto() {
         "sabado",
       ];
       const diaSemanaAtual = diasSemana[dataAtual.getDay()];
-
-      console.log("Dia da semana atual:", diaSemanaAtual);
 
       if (
         !horarioTrabalho ||
@@ -832,7 +900,6 @@ function RegistroPonto() {
             if (e.message.includes("Fora do horário permitido")) {
               throw e;
             }
-            console.error("Erro ao verificar registro de entrada:", e);
           }
         }
 
@@ -879,10 +946,6 @@ function RegistroPonto() {
         }
       }
 
-      console.log(
-        `Registrando ponto de ${tipoRegistro} para:`,
-        usuarioReconhecido.nome
-      );
       const dataFormatada = new Date(
         dataAtual.getFullYear(),
         dataAtual.getMonth(),
@@ -892,16 +955,12 @@ function RegistroPonto() {
         dataAtual.getSeconds()
       ).toISOString();
 
-      console.log("Data formatada para envio:", dataFormatada);
-
       const dadosRegistro = {
         nome: usuarioReconhecido.nome,
         usuario_id: usuarioReconhecidoId,
         data: dataFormatada,
         tipo_registro: tipoRegistro,
       };
-
-      console.log("Enviando dados para registro:", dadosRegistro);
 
       const resposta = await fetch(
         "https://faceponto-banco-dados-production.up.railway.app/frequencias/registrar",
@@ -925,14 +984,12 @@ function RegistroPonto() {
       }
 
       const resultado = await resposta.json();
-      console.log("Registro concluído com sucesso:", resultado);
 
       setTipoRegistroAtual(tipoRegistro);
       setSucesso(true);
       setUsuarioReconhecido(usuarioReconhecido.nome);
       setModoQuiosque("feedback");
     } catch (error) {
-      console.error("Erro no processo de registro:", error);
       setErro(error.message || "Erro ao registrar ponto. Tente novamente.");
       setSucesso(false);
       setModoQuiosque("feedback");
@@ -943,8 +1000,6 @@ function RegistroPonto() {
 
   const getKioskToken = async () => {
     try {
-      console.log("Obtendo token de quiosque...");
-
       localStorage.removeItem("kioskToken");
 
       const response = await fetch(
@@ -962,21 +1017,16 @@ function RegistroPonto() {
 
       if (!response.ok) {
         const status = response.status;
-        console.error(`Falha na autenticação do quiosque: ${status}`);
-
         try {
           const errorData = await response.json();
-          console.error("Detalhes do erro:", errorData);
         } catch (e) {}
 
         return null;
       }
 
       const data = await response.json();
-      console.log("Token de quiosque obtido com sucesso");
       return data.token;
     } catch (error) {
-      console.error("Erro ao obter token do quiosque:", error);
       return null;
     }
   };
@@ -992,11 +1042,15 @@ function RegistroPonto() {
     }
 
     feedbackTimerRef.current = setTimeout(() => {
-      resetarParaDeteccao();
+      if (componenteAtivo && componenteMontadoRef.current) {
+        resetarParaDeteccao();
+      }
     }, 5000);
   };
 
   const resetarParaDeteccao = () => {
+    if (!componenteAtivo || !componenteMontadoRef.current) return;
+    
     setSucesso(false);
     setErro("");
     setUsuarioReconhecido("");
@@ -1042,7 +1096,6 @@ function RegistroPonto() {
       )}
 
       <div className="fullscreen-container">
-        {}
         <div
           className={`camera-fullscreen ${
             modoQuiosque === "standby" ? "dim-video" : ""
@@ -1162,7 +1215,6 @@ function RegistroPonto() {
                   "https://faceponto-reconhecimento-facial-production.up.railway.app/status"
                 );
                 const status = await response.json();
-                console.log("Status do serviço:", status);
                 alert("Veja o console para detalhes do serviço.");
               }}
             >

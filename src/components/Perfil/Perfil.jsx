@@ -126,6 +126,10 @@ function Perfil() {
             />
           </div>
         </div>
+
+        <div className="perfil-aviso-edicao">
+          Para alterar seus dados, solicite ao administrador do sistema.
+        </div>
       </div>
     </div>
   );

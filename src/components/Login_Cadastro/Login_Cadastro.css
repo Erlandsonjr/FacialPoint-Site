@@ -485,6 +485,41 @@ body {
 }
 
 @media (max-width: 480px) {
+  .login-header {
+    flex-direction: column;
+    align-items: center;
+    padding: 3.8rem 0.5rem 0.5rem 0.5rem;
+    position: relative;
+    min-height: 130px;
+  }
+  
+  .voltar-button-cadastro {
+    position: absolute;
+    left: 10px;
+    top: 15px;
+    transform: none;
+    z-index: 5;
+  }
+  
+  .login-logo-link {
+    position: relative;
+    margin-top: 20px;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-header {
+    padding-top: 4.2rem;
+    min-height: 140px;
+  }
+  
+  .login-logo-link {
+    margin-top: 25px;
+  }
+}
+
+@media (max-width: 480px) {
     .container {
         max-width: 98vw;
         padding: 15px;
@@ -1504,7 +1539,9 @@ input:checked + .slider-mini:before {
   padding: 0.5rem 2rem 0.5rem 2rem;
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-bottom: 0.5rem;
+  position: relative;
 }
 
 .login-logo-link {
@@ -1712,6 +1749,77 @@ input:checked + .slider-mini:before {
   margin-right: 4px;
 }
 
+.botao-voltar-admin {
+  position: absolute;
+  left: 2rem;
+  background: none;
+  border: 1.5px solid #f5a623;
+  color: #f5a623;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 28px;
+  border-radius: 22px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  box-shadow: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botao-voltar-admin:hover {
+  background: #f5a623;
+  color: #1a1a1a;
+  border: 1.5px solid #f5a623;
+}
+
+.voltar-button {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-decoration: none;
+  z-index: 2;
+}
+
+.voltar-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #f5a623;
+}
+
+.voltar-button-cadastro {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-decoration: none;
+  z-index: 2;
+}
+
+.voltar-button-cadastro:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #f5a623;
+}
+
 @media (max-width: 768px) {
   .login-form-container {
     padding: 2rem;
@@ -1723,21 +1831,37 @@ input:checked + .slider-mini:before {
 }
 
 @media (max-width: 480px) {
-  .login-form-container {
-    padding: 1.5rem;
-    border-radius: 12px;
+  .login-header {
+    flex-direction: column;
+    align-items: center;
+    padding: 3.8rem 0.5rem 0.5rem 0.5rem;
+    position: relative;
+    min-height: 130px;
   }
   
-  .login-title {
-    font-size: 2rem;
+  .voltar-button-cadastro {
+    position: absolute;
+    left: 10px;
+    top: 15px;
+    transform: none;
+    z-index: 5;
   }
   
-  .login-form-header h2 {
-    font-size: 1.5rem;
+  .login-logo-link {
+    position: relative;
+    margin-top: 20px;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-header {
+    padding-top: 4.2rem;
+    min-height: 140px;
   }
   
-  .login-content-wrapper {
-    padding: 1rem;
+  .login-logo-link {
+    margin-top: 25px;
   }
 }
 

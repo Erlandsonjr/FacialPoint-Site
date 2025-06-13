@@ -62,8 +62,8 @@ function Admin() {
     navigate(`/admin/funcionario/${userId}`);
   };
 
-  const handleRegisterPoint = () => {
-    navigate("/registro");
+  const handleSingUp = () => {
+    navigate("/cadastro");
   };
 
   const handleLogout = () => {
@@ -112,10 +112,10 @@ function Admin() {
           <div className="admin-panel-header">
             <h1>Gerenciamento de Funcionários</h1>
             <button
-              className="register-point-button"
-              onClick={handleRegisterPoint}
+              className="admin-singup-button"
+              onClick={handleSingUp}
             >
-              <FaPlus /> Registrar Ponto
+              <FaPlus /> Cadastrar Funcionário
             </button>
           </div>
 

@@ -786,7 +786,7 @@ function Home() {
             <FaUserCircle /> Perfil
           </Link>
           <Link to="/controle" className="nav-link">
-            <FaChartBar /> Relatórios
+            <FaChartBar /> Gerar Relatório
           </Link>
         </nav>
 
@@ -1028,7 +1028,7 @@ function Home() {
         <div className="quick-actions">
           <Link to="/controle" className="action-card">
             <FaChartBar className="action-icon" />
-            <span>Relatórios Detalhados</span>
+            <span>Gerar Relatório</span>
           </Link>
           <Link to="/perfil" className="action-card">
             <FaUserCircle className="action-icon" />

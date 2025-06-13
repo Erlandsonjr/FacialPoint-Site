@@ -282,7 +282,7 @@ body {
   width: 100%;
   max-width: 450px;
   height: 350px;
-  background: var(--card-bg);
+  /*background: var(--card-bg);*/
   border-radius: var(--border-radius-lg);
   display: flex;
   align-items: center;

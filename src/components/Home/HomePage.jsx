@@ -34,6 +34,10 @@ function HomePage() {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      if (window.streamRef && window.streamRef.getTracks) {
+        window.streamRef.getTracks().forEach((track) => track.stop());
+        window.streamRef = null;
+      }
     };
   }, []);
 
@@ -101,7 +105,7 @@ function HomePage() {
             </p>
             <div className="hero-buttons">
               <Link to="/registro" className="hero-button primary">
-                <FaLock /> Área Administrativa
+                <FaLock /> Acesso ao Quiosque
               </Link>
               <Link to="/login" className="hero-button secondary">
                 <FaUserCircle /> Dashboard Pessoal
@@ -252,7 +256,7 @@ function HomePage() {
             </p>
             <div className="cta-button-group">
               <Link to="/registro" className="hero-button primary">
-                <FaLock /> Acesso Administrativo
+                <FaLock /> Acesso ao Quiosque
               </Link>
               <Link to="/login" className="hero-button secondary">
                 <FaUserCircle /> Dashboard do Colaborador

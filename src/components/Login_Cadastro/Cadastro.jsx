@@ -128,10 +128,12 @@ function Cadastro() {
   const handleFotoChange = (e) => {
     const arquivo = e.target.files[0];
     if (arquivo) {
-      if (!arquivo.type.includes("image/")) {
-        setErro("Por favor, selecione apenas arquivos de imagem.");
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!validTypes.includes(arquivo.type)) {
+        setErro("Por favor, selecione apenas imagens JPG ou PNG.");
         return;
       }
+      
       if (arquivo.size > 5 * 1024 * 1024) {
         setErro("A imagem deve ter no máximo 5MB.");
         return;
@@ -262,6 +264,9 @@ function Cadastro() {
   return (
     <div className="login-page-container-clean">
       <div className="login-header">
+        <Link to="/admin/dashboard" className="voltar-button-cadastro">
+          <FaArrowLeft /> Voltar
+        </Link>
         <Link to="/" className="login-logo-link">
           <div className="login-logo-container">
             <img src="/logo.png" alt="FacePonto Logo" className="login-logo" />
@@ -269,7 +274,7 @@ function Cadastro() {
           <h1 className="login-title">FacePonto</h1>
         </Link>
       </div>
-
+      
       {carregando && <LoadingSpinner message="Processando cadastro..." />}
       {sucesso &&
         ReactDOM.createPortal(
@@ -426,7 +431,7 @@ function Cadastro() {
                       <input
                         id="foto"
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg, image/png"
                         onChange={handleFotoChange}
                         className="foto-input"
                       />
