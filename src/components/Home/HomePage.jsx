@@ -104,7 +104,7 @@ function HomePage() {
               facilidade em um só lugar.
             </p>
             <div className="hero-buttons">
-              <Link to="/registro" className="hero-button primary">
+              <Link to="/kiosk" className="hero-button primary">
                 <FaLock /> Acesso ao Quiosque
               </Link>
               <Link to="/login" className="hero-button secondary">
@@ -255,7 +255,7 @@ function HomePage() {
               ou entre em contato para mais informações.
             </p>
             <div className="cta-button-group">
-              <Link to="/registro" className="hero-button primary">
+              <Link to="/kiosk" className="hero-button primary">
                 <FaLock /> Acesso ao Quiosque
               </Link>
               <Link to="/login" className="hero-button secondary">

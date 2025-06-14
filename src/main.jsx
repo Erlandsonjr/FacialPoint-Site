@@ -7,6 +7,7 @@ import {createBrowserRouter, RouterProvider} from 'react-router-dom';
 import Login from './components/Login_Cadastro/Login.jsx'
 import Cadastro from './components/Login_Cadastro/Cadastro.jsx'
 import RegistroPonto from './components/Registro/registro.jsx';
+import KioskAuth from './components/Registro/KioskAuth.jsx';
 import Home from './components/Home/home.jsx';
 import Perfil from './components/Perfil/Perfil.jsx';
 import Admin from './components/AdminDash/admin.jsx';
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "cadastro",
         element: <Cadastro />,
+      },
+      {
+        path: "kiosk",
+        element: <KioskAuth />,
       },
       {
         path: "registro",

@@ -374,3 +374,187 @@
         justify-content: flex-end;
     }
 }
+
+.config-button {
+  background: transparent;
+  border: 1px solid var(--border-color-strong);
+  border-radius: 30px;
+  color: var(--text-primary);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-primary);
+  font-weight: 500;
+}
+
+.config-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.admin-config-panel {
+  background: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  padding: 25px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  animation: fadeIn 0.5s ease-in;
+  margin-bottom: 30px;
+}
+
+.config-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.config-section h2 {
+  font-size: 1.3rem;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-color);
+}
+
+.config-section p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.current-password-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 12px 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.current-password-label {
+  color: var(--text-secondary);
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.current-password-value {
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-password-button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-password-button:hover {
+  color: var(--primary-color);
+}
+
+.password-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.password-input-group input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color-strong);
+  border-radius: 8px;
+  padding: 12px 15px;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.password-input-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.2);
+}
+
+.save-password-button {
+  background: var(--primary-color);
+  border: none;
+  border-radius: 8px;
+  color: black;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.save-password-button:hover {
+  background: var(--primary-hover);
+}
+
+.save-password-button:disabled {
+  background: rgba(245, 166, 35, 0.5);
+  cursor: not-allowed;
+}
+
+.password-message {
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.password-message.success {
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--success);
+  border-left: 3px solid var(--success);
+}
+
+.password-message.error {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--danger);
+  border-left: 3px solid var(--danger);
+}
+
+.password-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .password-input-group {
+    flex-direction: column;
+  }
+  
+  .save-password-button {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  .current-password-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .current-password-value {
+    margin-top: 8px;
+    width: 100%;
+    justify-content: space-between;
+  }
+}

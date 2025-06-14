@@ -5,6 +5,11 @@ import {
   FaSignOutAlt,
   FaPlus,
   FaSearch,
+  FaKey, 
+  FaSave,
+  FaEye, 
+  FaEyeSlash,
+  FaCog,
 } from "react-icons/fa";
 import "./admin.css";
 
@@ -15,10 +20,20 @@ function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const navigate = useNavigate();
+  
+  const [showConfigSection, setShowConfigSection] = useState(false);
+  const [kioskPassword, setKioskPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState({ text: "", type: "" });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    if (showConfigSection) {
+      fetchCurrentPassword();
+    }
+  }, [showConfigSection]);
 
   useEffect(() => {
     if (users.length > 0) {
@@ -55,6 +70,91 @@ function Admin() {
       setError("Erro ao carregar lista de funcionários. " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const fetchCurrentPassword = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
+      const response = await fetch(
+        "https://faceponto-banco-dados-production.up.railway.app/config/senha-kiosk",
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          setCurrentPassword("(Não definida)");
+          return;
+        }
+        throw new Error(`Erro ao buscar senha atual: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setCurrentPassword(data.senha || "(Não definida)");
+      
+    } catch (error) {
+      console.error("Erro ao buscar senha do quiosque:", error);
+      setCurrentPassword("Erro ao buscar senha atual");
+    }
+  };
+  
+  const saveKioskPassword = async () => {
+    if (!kioskPassword.trim() || kioskPassword.length < 4) {
+      setPasswordMessage({ 
+        text: "A senha deve ter pelo menos 4 caracteres", 
+        type: "error" 
+      });
+      return;
+    }
+    
+    try {
+      setSavingPassword(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(
+        "https://faceponto-banco-dados-production.up.railway.app/config/atualizar-senha-kiosk",
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ senha: kioskPassword })
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao salvar senha: ${response.status}`);
+      }
+      
+      setPasswordMessage({ 
+        text: "Senha do quiosque atualizada com sucesso!", 
+        type: "success" 
+      });
+      setCurrentPassword(kioskPassword);
+      setKioskPassword("");
+      
+      setTimeout(() => {
+        setPasswordMessage({ text: "", type: "" });
+      }, 3000);
+      
+    } catch (error) {
+      console.error("Erro ao salvar senha:", error);
+      setPasswordMessage({ 
+        text: `Erro ao salvar senha: ${error.message}`, 
+        type: "error" 
+      });
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -101,6 +201,9 @@ function Admin() {
         </div>
 
         <div className="admin-actions">
+          <button className="config-button" onClick={() => setShowConfigSection(!showConfigSection)}>
+            <FaCog /> Configurações
+          </button>
           <button className="logout-button" onClick={handleLogout}>
             <FaSignOutAlt /> Sair
           </button>
@@ -108,6 +211,59 @@ function Admin() {
       </header>
 
       <main className="admin-content">
+        {showConfigSection && (
+          <div className="admin-config-panel">
+            <div className="admin-panel-header">
+              <h1>Configurações do Sistema</h1>
+            </div>
+            
+            <div className="config-section">
+              <h2><FaKey /> Configurar Senha do Quiosque</h2>
+              <p>Configure a senha para acesso ao quiosque de registro de ponto.</p>
+              
+              <div className="current-password-section">
+                <div className="current-password-label">Senha atual:</div>
+                <div className="current-password-value">
+                  {showPassword ? currentPassword : '••••••••'}
+                  <button 
+                    className="toggle-password-button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="password-input-group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Nova senha do quiosque"
+                  value={kioskPassword}
+                  onChange={(e) => setKioskPassword(e.target.value)}
+                />
+                <button 
+                  className="save-password-button"
+                  onClick={saveKioskPassword}
+                  disabled={savingPassword}
+                >
+                  {savingPassword ? "Salvando..." : <><FaSave /> Salvar</>}
+                </button>
+              </div>
+              
+              {passwordMessage.text && (
+                <div className={`password-message ${passwordMessage.type}`}>
+                  {passwordMessage.text}
+                </div>
+              )}
+              
+              <p className="password-info">
+                Esta senha será solicitada para acessar o quiosque de registro de ponto.
+                Recomendamos uma senha simples, mas que não seja facilmente adivinhada.
+              </p>
+            </div>
+          </div>
+        )}
+      
         <div className="admin-panel">
           <div className="admin-panel-header">
             <h1>Gerenciamento de Funcionários</h1>

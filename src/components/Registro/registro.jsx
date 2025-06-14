@@ -10,8 +10,10 @@ import "./registro.css";
 import LoadingSpinner from "../Login_Cadastro/LoadingSpinner";
 import axios from "axios";
 import * as faceapi from "face-api.js";
+import { useNavigate } from "react-router-dom";
 
 function RegistroPonto() {
+  const navigate = useNavigate();
   const [stream, setStream] = useState(null);
   const [foto, setFoto] = useState(null);
   const [fotoUrl, setFotoUrl] = useState(null);
@@ -1088,6 +1090,18 @@ function RegistroPonto() {
     if (detectionRef.current) clearInterval(detectionRef.current);
     setModoQuiosque("contagem");
   };
+
+  useEffect(() => {
+    const checkKioskAuth = () => {
+      const isAuth = localStorage.getItem('kioskAuth');
+      const authTime = localStorage.getItem('kioskAuthTime');
+      if (!isAuth || !authTime) {
+        navigate('/kiosk');
+        return;
+      }
+    };
+    checkKioskAuth();
+  }, [navigate]);
 
   return (
     <>
