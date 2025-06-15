@@ -7,6 +7,8 @@ import {
 } from 'react-icons/fa';
 import './userDetails.css';
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 function UserDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,27 +55,22 @@ function UserDetails() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
-      const response = await fetch(`https://faceponto-banco-dados-production.up.railway.app/usuarios/${id}`, {
+      const response = await fetch(`${API_BASE}/usuarios/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
       if (!response.ok) {
         throw new Error(`Erro ao carregar dados do funcionário: ${response.status}`);
       }
-
       const userData = await response.json();
       setUser(userData);
       setEditedUser({...userData});
       if (userData.perfil) {
         setPhotoPreview(userData.perfil);
       }
-      
     } catch (error) {
       setError(`Erro ao carregar dados do usuário: ${error.message}`);
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -82,23 +79,17 @@ function UserDetails() {
   const fetchUserFrequencies = async () => {
     try {
       const token = localStorage.getItem('token');
-      
-      const response = await fetch(`https://faceponto-banco-dados-production.up.railway.app/frequencias/usuario/${id}`, {
+      const response = await fetch(`${API_BASE}/frequencias/usuario/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
       if (!response.ok) {
         throw new Error(`Erro ao carregar frequências: ${response.status}`);
       }
-
       const frequenciesData = await response.json();
       setFrequencies(frequenciesData);
-      
-    } catch (error) {
-      console.error('Erro ao carregar frequências:', error);
-    }
+    } catch (error) {}
   };
 
   const handleEditToggle = () => {
@@ -145,15 +136,12 @@ function UserDetails() {
         alert("Por favor, selecione apenas imagens JPG ou PNG.");
         return;
       }
-      
       if (file.size > 5 * 1024 * 1024) {
         alert("A imagem deve ter no máximo 5MB.");
         return;
       }
-      
       setNewPhoto(file);
       setPhotoName(file.name);
-      
       const reader = new FileReader();
       reader.onload = (e) => setPhotoPreview(e.target.result);
       reader.readAsDataURL(file);
@@ -172,44 +160,34 @@ function UserDetails() {
 
   const validateSchedule = () => {
     if (!editedUser || !editedUser.horarioTrabalho) return "Horário de trabalho não está definido";
-    
     const diasAtivos = Object.keys(editedUser.horarioTrabalho).filter(dia => 
       editedUser.horarioTrabalho[dia] &&
       editedUser.horarioTrabalho[dia].entrada &&
       editedUser.horarioTrabalho[dia].saida
     );
-    
     if (diasAtivos.length === 0) {
       return "É necessário configurar pelo menos um dia de trabalho";
     }
-    
     for (const dia of diasAtivos) {
       const entrada = editedUser.horarioTrabalho[dia].entrada;
       const saida = editedUser.horarioTrabalho[dia].saida;
-      
       if (!entrada || !saida) continue;
-      
       const [horaEntrada, minEntrada] = entrada.split(':').map(Number);
       const [horaSaida, minSaida] = saida.split(':').map(Number);
-      
       const entradaMin = horaEntrada * 60 + minEntrada;
       const saidaMin = horaSaida * 60 + minSaida;
-      
       if (entradaMin >= saidaMin) {
         return `No dia ${dia.charAt(0).toUpperCase() + dia.slice(1)}, o horário de entrada deve ser antes do horário de saída`;
       }
-      
       if (saidaMin - entradaMin < 15) {
         return `No dia ${dia.charAt(0).toUpperCase() + dia.slice(1)}, o horário de saída deve ter pelo menos 15 minutos de diferença do horário de entrada`;
       }
     }
-    
     return null;
   };
 
   const validateChanges = () => {
     setValidationError(null);
-    
     if (passwordTab) {
       if (newPassword && newPassword.length < 3) {
         setValidationError("A senha deve ter pelo menos 3 caracteres.");
@@ -220,22 +198,18 @@ function UserDetails() {
         return false;
       }
     }
-    
     const scheduleError = validateSchedule();
     if (scheduleError) {
       setValidationError(scheduleError);
       return false;
     }
-    
     return true;
   };
 
   const processPhotoUpdate = async () => {
     if (!newPhoto) return null;
-
     try {
       setProcessingPhoto(true);
-      
       const convertToBase64 = (file) => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -244,12 +218,9 @@ function UserDetails() {
           reader.onerror = (error) => reject(error);
         });
       };
-      
       const photoBase64 = await convertToBase64(newPhoto);
-      
       const formData = new FormData();
       formData.append("file", newPhoto);
-      
       const codificacaoResponse = await fetch(
         "https://gerarcodificacaofaceponto-production.up.railway.app/gerar-codificacao",
         {
@@ -257,13 +228,10 @@ function UserDetails() {
           body: formData,
         }
       );
-      
       if (!codificacaoResponse.ok) {
         throw new Error(`Erro ao processar foto (${codificacaoResponse.status})`);
       }
-      
       const responseData = await codificacaoResponse.json();
-      
       let codificacao;
       if (Array.isArray(responseData)) {
         codificacao = responseData;
@@ -274,7 +242,6 @@ function UserDetails() {
       } else {
         throw new Error("Formato de resposta inválido da API de codificação.");
       }
-      
       return {
         fotoCodificacao: codificacao,
         fotoPerfil: photoBase64
@@ -289,29 +256,23 @@ function UserDetails() {
 
   const handleSaveUser = async () => {
     if (!validateChanges()) return;
-    
     try {
       const token = localStorage.getItem('token');
-      
       const updateData = {
         nome: editedUser.nome,
         email: editedUser.email,
         horarioTrabalho: editedUser.horarioTrabalho
       };
-      
       if (passwordTab && newPassword) {
         updateData.senha = newPassword;
       }
-      
       if (photoTab && newPhoto) {
         const photoData = await processPhotoUpdate();
         if (!photoData) return;
-        
         updateData.foto = photoData.fotoCodificacao;
         updateData.perfil = photoData.fotoPerfil;
       }
-      
-      const response = await fetch(`https://faceponto-banco-dados-production.up.railway.app/usuarios/admin/${id}`, {
+      const response = await fetch(`${API_BASE}/usuarios/admin/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -319,11 +280,9 @@ function UserDetails() {
         },
         body: JSON.stringify(updateData)
       });
-
       if (!response.ok) {
         throw new Error(`Erro ao atualizar dados: ${response.status}`);
       }
-
       const updatedUser = await response.json();
       setUser(updatedUser);
       setEditMode(false);
@@ -331,10 +290,8 @@ function UserDetails() {
       setPhotoTab(false);
       setValidationError(null);
       alert('Dados atualizados com sucesso!');
-      
     } catch (error) {
       setValidationError(`Erro ao salvar alterações: ${error.message}`);
-      console.error(error);
     }
   };
 
@@ -342,23 +299,19 @@ function UserDetails() {
     try {
       setDeleteLoading(true);
       const token = localStorage.getItem('token');
-      
-      const response = await fetch(`https://faceponto-banco-dados-production.up.railway.app/usuarios/admin/${id}`, {
+      const response = await fetch(`${API_BASE}/usuarios/admin/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
       if (!response.ok) {
         throw new Error(`Erro ao excluir usuário: ${response.status}`);
       }
-
       alert('Funcionário excluído com sucesso!');
       navigate('/admin/dashboard');
     } catch (error) {
       setValidationError(`Erro ao excluir funcionário: ${error.message}`);
-      console.error(error);
     } finally {
       setDeleteLoading(false);
       setShowDeleteConfirm(false);
@@ -367,7 +320,6 @@ function UserDetails() {
 
   const renderScheduleInputs = () => {
     if (!user || !user.horarioTrabalho) return null;
-    
     const days = [
       { id: 'domingo', label: 'Domingo' },
       { id: 'segunda', label: 'Segunda' },
@@ -377,7 +329,6 @@ function UserDetails() {
       { id: 'sexta', label: 'Sexta' },
       { id: 'sabado', label: 'Sábado' },
     ];
-
     return days.map((day) => (
       <div key={day.id} className="schedule-day">
         <div className="day-name">{day.label}</div>
@@ -431,19 +382,15 @@ function UserDetails() {
   
   const filterFrequencies = () => {
     if (!frequencies.length) return [];
-    
     return frequencies.filter(freq => {
       const freqDate = new Date(freq.data);
       const startDate = new Date(frequencyFilters.startDate);
       const endDate = new Date(frequencyFilters.endDate);
       endDate.setHours(23, 59, 59, 999);
-      
       const inDateRange = freqDate >= startDate && freqDate <= endDate;
-      
       if (frequencyFilters.type === 'all') {
         return inDateRange;
       }
-      
       return inDateRange && freq.tipo_registro === frequencyFilters.type;
     });
   };
@@ -489,7 +436,7 @@ function UserDetails() {
     setManualPointLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://faceponto-banco-dados-production.up.railway.app/frequencias/manual', {
+      const response = await fetch(`${API_BASE}/frequencias/manual`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

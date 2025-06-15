@@ -42,13 +42,9 @@ function HomePage() {
   }, []);
 
   const scrollToSection = (id) => {
-    console.log(`Tentando rolar para ${id}`);
-
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
-        console.log(`Elemento encontrado: ${id}`);
-
         element.scrollIntoView({
           behavior: "smooth",
           block: "start",
@@ -57,8 +53,6 @@ function HomePage() {
         setTimeout(() => {
           window.scrollBy(0, -80);
         }, 100);
-      } else {
-        console.error(`Elemento não encontrado: ${id}`);
       }
     }, 100);
   };

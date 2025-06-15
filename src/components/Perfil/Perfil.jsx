@@ -4,6 +4,8 @@ import { FaUser, FaArrowLeft, FaCheck, FaIdCard } from "react-icons/fa";
 import "./perfil.css";
 import LoadingSpinner from "../Login_Cadastro/LoadingSpinner";
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 function Perfil() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,9 +26,8 @@ function Perfil() {
         }
 
         try {
-          console.log("Buscando dados do usuário...");
           const userResponse = await fetch(
-            `https://faceponto-banco-dados-production.up.railway.app/usuarios/me`,
+            `${API_BASE}/usuarios/me`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -36,7 +37,6 @@ function Perfil() {
 
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            console.log("Dados do usuário recebidos:", userData);
             setUserData(userData);
             setNome(userData.nome || "");
             setEmail(userData.email || "");
@@ -46,13 +46,11 @@ function Perfil() {
             throw new Error("Erro ao buscar dados do usuário");
           }
         } catch (error) {
-          console.error("Erro ao buscar dados de usuário:", error);
           setError(
             "Não foi possível carregar seus dados. Por favor, tente novamente."
           );
         }
       } catch (error) {
-        console.error("Erro:", error);
         setError(error.message);
       } finally {
         setLoading(false);

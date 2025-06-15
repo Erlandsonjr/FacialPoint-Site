@@ -24,6 +24,8 @@ import {
 } from "chart.js";
 import "./home.css";
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 ChartJS.register(
   LinearScale,
   BarElement,
@@ -147,15 +149,12 @@ function Home() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log("Iniciando fetchUserData");
       if (userDataFetched.current) {
-        console.log("Dados do usuário já foram carregados");
         return;
       }
       try {
-        console.log("Entrou no try do fetchUserData");
         const timeResponse = await fetch(
-          "https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia"
+          `${API_BASE}/proxy/horario-brasilia`
         );
         if (!timeResponse.ok)
           throw new Error(`Erro ao atualizar horário: ${timeResponse.status}`);
@@ -174,7 +173,7 @@ function Home() {
 
         try {
           const userResponse = await fetch(
-            "https://faceponto-banco-dados-production.up.railway.app/usuarios/me",
+            `${API_BASE}/usuarios/me`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -184,7 +183,6 @@ function Home() {
 
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            console.log("Dados de usuário obtidos:", userData);
             setUserData(userData);
 
             if (userData.horarioTrabalho) {
@@ -202,11 +200,8 @@ function Home() {
               const diaSemanaAtual = diasSemana[serverTime.getDay()];
 
               const horarioDia = userData.horarioTrabalho[diaSemanaAtual];
-
-              console.log(`Horário para ${diaSemanaAtual}:`, horarioDia);
             }
           } else {
-            console.warn("Erro ao obter dados do usuário.");
             const tokenParts = token.split(".");
             const payload = JSON.parse(atob(tokenParts[1]));
             const defaultUser = {
@@ -219,7 +214,6 @@ function Home() {
 
           userDataFetched.current = true;
         } catch (error) {
-          console.error("Erro ao buscar dados de usuário:", error);
           const tokenParts = token.split(".");
           const payload = JSON.parse(atob(tokenParts[1]));
           const defaultUser = {
@@ -233,7 +227,7 @@ function Home() {
 
         const timestamp = Date.now();
         const attendanceResponse = await fetch(
-          `https://faceponto-banco-dados-production.up.railway.app/frequencias/minhas?nocache=${timestamp}`,
+          `${API_BASE}/frequencias/minhas?nocache=${timestamp}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -244,7 +238,6 @@ function Home() {
 
         if (!attendanceResponse.ok) {
           if (attendanceResponse.status === 404) {
-            console.log("Usuário sem registros de frequência");
             return;
           }
 
@@ -259,14 +252,12 @@ function Home() {
 
           try {
             const errorData = await attendanceResponse.json();
-            console.log("Erro detalhado:", errorData);
 
             if (
               errorData.erro &&
               (errorData.erro.includes("não encontrado") ||
                 errorData.erro.includes("frequência"))
             ) {
-              console.log("Usuário sem registros ainda");
               return;
             }
 
@@ -278,11 +269,9 @@ function Home() {
         }
 
         const attendanceData = await attendanceResponse.json();
-        console.log("Dados de frequência recebidos:", attendanceData);
 
         setAttendanceRaw(attendanceData);
       } catch (error) {
-        console.error("Erro:", error);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -313,9 +302,8 @@ function Home() {
 
     const syncWithServer = async () => {
       try {
-        console.log("🔄 Tentando sincronizar horário com servidor...");
         const timeResponse = await fetch(
-          "https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia"
+          `${API_BASE}/proxy/horario-brasilia`
         );
 
         if (!timeResponse.ok)
@@ -328,23 +316,8 @@ function Home() {
         localTime = serverTime;
         setCurrentServerTime(serverTime);
         setUsingLocalTime(false);
-
-        console.log(
-          "Horário do servidor:",
-          serverTime.toLocaleString("pt-BR"),
-          "| Fuso:",
-          serverTime.getTimezoneOffset() / 60
-        );
-
-        console.log(
-          "✓ Horário sincronizado:",
-          serverTime.toLocaleString("pt-BR")
-        );
       } catch (err) {
         failedAttempts++;
-        console.warn(
-          `Falha ao sincronizar horário (tentativa ${failedAttempts}). Usando horário local.`
-        );
         setUsingLocalTime(true);
 
         if (!localTime) {

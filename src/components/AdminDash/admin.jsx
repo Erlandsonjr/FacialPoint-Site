@@ -13,6 +13,8 @@ import {
 } from "react-icons/fa";
 import "./admin.css";
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 function Admin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ function Admin() {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/public/usuarios/completos"
+        `${API_BASE}/public/usuarios/completos`
       );
 
       if (!response.ok) {
@@ -82,7 +84,7 @@ function Admin() {
       }
       
       const response = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/config/senha-kiosk",
+        `${API_BASE}/config/senha-kiosk`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -121,7 +123,7 @@ function Admin() {
       const token = localStorage.getItem('token');
       
       const response = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/config/atualizar-senha-kiosk",
+        `${API_BASE}/config/atualizar-senha-kiosk`,
         {
           method: 'POST',
           headers: {

@@ -3,6 +3,8 @@ import { useState } from "react";
 import "./Login_Cadastro.css";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -17,7 +19,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/usuarios/login",
+        `${API_BASE}/usuarios/login`,
         {
           method: "POST",
           headers: {

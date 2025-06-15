@@ -12,6 +12,8 @@ import axios from "axios";
 import * as faceapi from "face-api.js";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 function RegistroPonto() {
   const navigate = useNavigate();
   const [stream, setStream] = useState(null);
@@ -178,7 +180,7 @@ function RegistroPonto() {
   const fetchServerTime = async () => {
     try {
       const timeResponse = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia"
+        `${API_BASE}/proxy/horario-brasilia`
       );
 
       if (!timeResponse.ok) {
@@ -239,7 +241,7 @@ function RegistroPonto() {
       
       try {
         const timeResponse = await fetch(
-          `https://faceponto-banco-dados-production.up.railway.app/proxy/horario-brasilia?t=${Date.now()}`
+          `${API_BASE}/proxy/horario-brasilia?t=${Date.now()}`
         );
 
         if (!timeResponse.ok) {
@@ -646,7 +648,7 @@ function RegistroPonto() {
       }
 
       const usuariosResponse = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/public/usuarios/codificacoes",
+        `${API_BASE}/public/usuarios/codificacoes`,
         {
           method: "GET",
           headers: {
@@ -781,7 +783,7 @@ function RegistroPonto() {
       setUsuarioReconhecido(usuarioReconhecido.nome);
 
       const horarioResponse = await fetch(
-        `https://faceponto-banco-dados-production.up.railway.app/public/usuarios/${usuarioReconhecidoId}/horario`,
+        `${API_BASE}/public/usuarios/${usuarioReconhecidoId}/horario`,
         {
           method: "GET",
           headers: {
@@ -876,7 +878,7 @@ function RegistroPonto() {
 
           try {
             const verificaEntradaResponse = await fetch(
-              `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=entrada`,
+              `${API_BASE}/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=entrada`,
               {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
@@ -965,7 +967,7 @@ function RegistroPonto() {
       };
 
       const resposta = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/frequencias/registrar",
+        `${API_BASE}/frequencias/registrar`,
         {
           method: "POST",
           headers: {
@@ -1005,7 +1007,7 @@ function RegistroPonto() {
       localStorage.removeItem("kioskToken");
 
       const response = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/auth/kiosk",
+        `${API_BASE}/auth/kiosk`,
         {
           method: "POST",
           headers: {

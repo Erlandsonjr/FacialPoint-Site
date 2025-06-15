@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { FaLock, FaArrowRight, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import './kioskAuth.css';
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 function KioskAuth() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,7 +20,7 @@ function KioskAuth() {
     }
     try {
       setLoading(true);
-      const response = await fetch('https://faceponto-banco-dados-production.up.railway.app/config/verificar-senha-kiosk', {
+      const response = await fetch(`${API_BASE}/config/verificar-senha-kiosk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

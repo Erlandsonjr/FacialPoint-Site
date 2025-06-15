@@ -14,6 +14,8 @@ import "./Login_Cadastro.css";
 import LoadingSpinner from "./LoadingSpinner";
 import ReactDOM from "react-dom";
 
+const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+
 function Cadastro() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -240,7 +242,7 @@ function Cadastro() {
         horarioTrabalho,
       };
       const responseCadastro = await fetch(
-        "https://faceponto-banco-dados-production.up.railway.app/usuarios/cadastro",
+        `${API_BASE}/usuarios/cadastro`,
         {
           method: "POST",
           headers: {
