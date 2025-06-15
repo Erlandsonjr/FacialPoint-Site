@@ -5,7 +5,7 @@ import {
   FaSave, FaTimes, FaCheck, FaAngleDown, FaAngleUp, FaUpload, FaKey,
   FaTrash, FaExclamationTriangle, FaPlus
 } from 'react-icons/fa';
-import './userDetails.css';
+import './UserDetails.css';
 
 const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
 
