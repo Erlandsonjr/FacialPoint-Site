@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaLock, FaArrowRight, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import './kioskAuth.css';
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 function KioskAuth() {
   const [password, setPassword] = useState('');
@@ -43,8 +43,8 @@ function KioskAuth() {
   return (
     <div className="kiosk-auth-container">
       <div className="kiosk-auth-header">
-        <img src="/logo.png" alt="FacePonto" className="kiosk-logo" />
-        <h1>FacePonto</h1>
+        <img src="/logo.png" alt="FacialPoint" className="kiosk-logo" />
+        <h1>FacialPoint</h1>
       </div>
       <button
         className="kiosk-back-button"
@@ -86,7 +86,7 @@ function KioskAuth() {
         </div>
       </div>
       <div className="kiosk-auth-footer">
-        © {new Date().getFullYear()} FacePonto - Sistema de Reconhecimento Facial
+        © {new Date().getFullYear()} FacialPoint - Sistema de Reconhecimento Facial
       </div>
     </div>
   );

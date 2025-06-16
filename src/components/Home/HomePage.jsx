@@ -62,8 +62,8 @@ function HomePage() {
       <header className={`landing-header ${scrolled ? "scrolled" : ""}`}>
         <div className="header-content">
           <Link to="/" className="logo-container">
-            <img src="/logo.png" alt="FacePonto Logo" className="logo-image" />
-            <h1 className="logo-title">FacePonto</h1>
+            <img src="/logo.png" alt="FacialPoint Logo" className="logo-image" />
+            <h1 className="logo-title">FacialPoint</h1>
           </Link>
           <nav className="header-nav">
             <button
@@ -110,7 +110,7 @@ function HomePage() {
             <div className="hero-image-placeholder" style={{ border: "none", boxShadow: "none", background: "none", padding: 0 }}>
               <img
                 src="/logo.png"
-                alt="FacePonto Logo"
+                alt="FacialPoint Logo"
                 style={{
                   width: "100%",
                   maxWidth: 900,
@@ -139,7 +139,7 @@ function HomePage() {
           <div className="section-header">
             <h2>Recursos que Transformam sua Gestão</h2>
             <p>
-              Descubra como o FacePonto simplifica e otimiza o controle de ponto
+              Descubra como o FacialPoint simplifica e otimiza o controle de ponto
               na sua empresa.
             </p>
           </div>
@@ -200,7 +200,7 @@ function HomePage() {
         <div className="section-container">
           <div className="section-header">
             <h2>Simples de Implementar, Fácil de Usar</h2>
-            <p>Veja como o FacePonto funciona em três passos práticos.</p>
+            <p>Veja como o FacialPoint funciona em três passos práticos.</p>
           </div>
           <div className="steps-container">
             <div className="step-card">
@@ -245,7 +245,7 @@ function HomePage() {
           <div className="cta-content">
             <h2>Pronto para Revolucionar seu Controle de Ponto?</h2>
             <p>
-              Experimente a eficiência e segurança do FacePonto. Acesse sua área
+              Experimente a eficiência e segurança do FacialPoint. Acesse sua área
               ou entre em contato para mais informações.
             </p>
             <div className="cta-button-group">
@@ -270,10 +270,10 @@ function HomePage() {
             >
               <img
                 src="/logo.png"
-                alt="FacePonto Logo"
+                alt="FacialPoint Logo"
                 className="logo-image"
               />
-              <h1 className="logo-title">FacePonto</h1>
+              <h1 className="logo-title">FacialPoint</h1>
             </Link>
             <p>Simplificando o controle de presença com tecnologia de ponta.</p>
           </div>
@@ -301,15 +301,15 @@ function HomePage() {
           </div>
           <div className="footer-column">
             <h4>Contato</h4>
-            <a href="mailto:contato@faceponto.com.br" className="footer-link">
+            <a href="mailto:contato@facialpoint.com.br" className="footer-link">
               <FaEnvelope />
-              contato@faceponto.com.br
+              contato@facialpoint.com.br
             </a>
           </div>
         </div>
         <div className="footer-bottom">
           <p>
-            &copy; {new Date().getFullYear()} FacePonto. Todos os direitos
+            &copy; {new Date().getFullYear()} FacialPoint. Todos os direitos
             reservados.
           </p>
         </div>

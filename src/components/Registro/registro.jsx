@@ -12,7 +12,7 @@ import axios from "axios";
 import * as faceapi from "face-api.js";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 function RegistroPonto() {
   const navigate = useNavigate();
@@ -755,7 +755,7 @@ function RegistroPonto() {
       });
 
       const verificacaoResponse = await axios.post(
-        "https://faceponto-reconhecimento-facial-production.up.railway.app/reconhecer-multiplos/",
+        "https://facialpoint-reconhecimento-facial-production.up.railway.app/reconhecer-multiplos/",
         formData,
         {
           headers: {
@@ -919,7 +919,7 @@ function RegistroPonto() {
       const hoje = dataAtual.toISOString().split("T")[0];
 
       const verificaRegistroResponse = await fetch(
-        `https://faceponto-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=${tipoRegistro}`,
+        `https://facialpoint-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=${tipoRegistro}`,
         {
           method: "GET",
           headers: {
@@ -1014,7 +1014,7 @@ function RegistroPonto() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            kioskSecret: "FacePonto2025",
+            kioskSecret: "FacialPoint2025",
           }),
         }
       );
@@ -1228,7 +1228,7 @@ function RegistroPonto() {
               className="debug-button"
               onClick={async () => {
                 const response = await fetch(
-                  "https://faceponto-reconhecimento-facial-production.up.railway.app/status"
+                  "https://facialpoint-reconhecimento-facial-production.up.railway.app/status"
                 );
                 const status = await response.json();
                 alert("Veja o console para detalhes do serviço.");

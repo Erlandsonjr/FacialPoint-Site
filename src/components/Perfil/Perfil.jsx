@@ -4,7 +4,7 @@ import { FaUser, FaArrowLeft, FaCheck, FaIdCard } from "react-icons/fa";
 import "./perfil.css";
 import LoadingSpinner from "../Login_Cadastro/LoadingSpinner";
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 function Perfil() {
   const [userData, setUserData] = useState(null);

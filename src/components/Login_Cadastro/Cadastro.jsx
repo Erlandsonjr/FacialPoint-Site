@@ -14,7 +14,7 @@ import "./Login_Cadastro.css";
 import LoadingSpinner from "./LoadingSpinner";
 import ReactDOM from "react-dom";
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 function Cadastro() {
   const [username, setUsername] = useState("");
@@ -171,7 +171,7 @@ function Cadastro() {
       const formData = new FormData();
       formData.append("file", foto);
       const responseCodificacao = await fetch(
-        "https://gerarcodificacaofaceponto-production.up.railway.app/gerar-codificacao",
+        "https://gerarcodificacaofacialpoint-production.up.railway.app/gerar-codificacao",
         {
           method: "POST",
           body: formData,
@@ -271,9 +271,9 @@ function Cadastro() {
         </Link>
         <Link to="/" className="login-logo-link">
           <div className="login-logo-container">
-            <img src="/logo.png" alt="FacePonto Logo" className="login-logo" />
+            <img src="/logo.png" alt="FacialPoint Logo" className="login-logo" />
           </div>
-          <h1 className="login-title">FacePonto</h1>
+          <h1 className="login-title">FacialPoint</h1>
         </Link>
       </div>
       

@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa';
 import './UserDetails.css';
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 function UserDetails() {
   const { id } = useParams();
@@ -222,7 +222,7 @@ function UserDetails() {
       const formData = new FormData();
       formData.append("file", newPhoto);
       const codificacaoResponse = await fetch(
-        "https://gerarcodificacaofaceponto-production.up.railway.app/gerar-codificacao",
+        "https://gerarcodificacaofacialpoint-production.up.railway.app/gerar-codificacao",
         {
           method: "POST",
           body: formData,

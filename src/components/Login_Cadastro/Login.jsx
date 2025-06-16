@@ -3,7 +3,7 @@ import { useState } from "react";
 import "./Login_Cadastro.css";
 import { Link, useNavigate } from "react-router-dom";
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -51,9 +51,9 @@ const Login = () => {
       <div className="login-header">
         <Link to="/" className="login-logo-link">
           <div className="login-logo-container">
-            <img src="/logo.png" alt="FacePonto Logo" className="login-logo" />
+            <img src="/logo.png" alt="FacialPoint Logo" className="login-logo" />
           </div>
-          <h1 className="login-title">FacePonto</h1>
+          <h1 className="login-title">FacialPoint</h1>
         </Link>
       </div>
 

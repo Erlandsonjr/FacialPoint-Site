@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import "./admin.css";
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 function Admin() {
   const [users, setUsers] = useState([]);
@@ -178,8 +178,8 @@ function Admin() {
       <div className="admin-container">
         <header className="admin-header">
           <div className="logo-container">
-            <img src="/logo.png" alt="FacePonto" className="logo" />
-            <h2>FacePonto Admin</h2>
+            <img src="/logo.png" alt="FacialPoint" className="logo" />
+            <h2>FacialPoint Admin</h2>
           </div>
         </header>
         <main className="admin-content">
@@ -198,8 +198,8 @@ function Admin() {
     <div className="admin-container">
       <header className="admin-header">
         <div className="logo-container">
-          <img src="/logo.png" alt="FacePonto" className="logo" />
-          <h2>FacePonto Admin</h2>
+          <img src="/logo.png" alt="FacialPoint" className="logo" />
+          <h2>FacialPoint Admin</h2>
         </div>
 
         <div className="admin-actions">

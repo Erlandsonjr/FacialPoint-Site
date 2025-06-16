@@ -24,7 +24,7 @@ import {
 } from "chart.js";
 import "./home.css";
 
-const API_BASE = "https://faceponto-banco-dados-production.up.railway.app";
+const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
 
 ChartJS.register(
   LinearScale,
@@ -751,7 +751,7 @@ function Home() {
       <header className="home-header">
         <div className="logo-container">
           <img src="/logo.png" alt="" className="logo" />
-          <h2>FacePonto</h2>
+          <h2>FacialPoint</h2>
         </div>
 
         <nav className="main-nav">
