@@ -582,3 +582,13 @@ body {
         font-size: 0.9rem;
     }
 }
+
+.icon-spin {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

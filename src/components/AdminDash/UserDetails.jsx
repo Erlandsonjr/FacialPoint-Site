@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaArrowLeft, FaUser, FaCalendarAlt, FaClock, FaEdit, FaCamera,
   FaSave, FaTimes, FaCheck, FaAngleDown, FaAngleUp, FaUpload, FaKey,
-  FaTrash, FaExclamationTriangle, FaPlus
+  FaTrash, FaExclamationTriangle, FaPlus, FaDownload
 } from 'react-icons/fa';
 import './UserDetails.css';
 
@@ -35,6 +35,7 @@ function UserDetails() {
   const [validationError, setValidationError] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [downloadingCsv, setDownloadingCsv] = useState(false);
 
   const [showAddPoint, setShowAddPoint] = useState(false);
   const [manualPoint, setManualPoint] = useState({
@@ -466,6 +467,45 @@ function UserDetails() {
     }
   };
 
+  const handleDownloadCsv = async () => {
+    if (!id || downloadingCsv) return;
+    
+    try {
+      setDownloadingCsv(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_BASE}/frequencias/usuario/${id}/csv`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Nenhum registro de frequência encontrado');
+        } else if (response.status === 403) {
+          throw new Error('Você não tem permissão para acessar este recurso');
+        }
+        throw new Error(`Erro ao baixar relatório (${response.status})`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `frequencias_${user?.nome || 'usuario'}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      setError(`Não foi possível baixar o relatório: ${error.message}`);
+    } finally {
+      setDownloadingCsv(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="user-details-container">
@@ -676,13 +716,23 @@ function UserDetails() {
             <div className="section-header">
               <h2><FaCalendarAlt /> Histórico de Ponto</h2>
             </div>
-            <button
-              className="add-point-button"
-              onClick={() => setShowAddPoint(!showAddPoint)}
-              style={{ marginBottom: '12px' }}
-            >
-              <FaPlus /> Adicionar Ponto Manualmente
-            </button>
+            <div className="frequency-header-actions">
+              <button
+                className="add-point-button"
+                onClick={() => setShowAddPoint(!showAddPoint)}
+              >
+                <FaPlus /> Adicionar Ponto Manualmente
+              </button>
+              
+              <button
+                className="download-csv-button"
+                onClick={handleDownloadCsv}
+                disabled={downloadingCsv}
+              >
+                <FaDownload /> {downloadingCsv ? 'Baixando...' : 'Exportar CSV'}
+              </button>
+            </div>
+            
             {showAddPoint && (
               <form className="add-point-form" onSubmit={handleAddPoint}>
                 <div className="add-point-fields">

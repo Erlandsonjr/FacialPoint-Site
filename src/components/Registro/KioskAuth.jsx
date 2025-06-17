@@ -74,7 +74,7 @@ function KioskAuth() {
                 className="kiosk-auth-button"
                 disabled={loading}
               >
-                {loading ? 'Verificando...' : <FaArrowRight />}
+                <FaArrowRight />
               </button>
             </div>
             {error && (

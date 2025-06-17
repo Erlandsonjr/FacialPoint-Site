@@ -84,19 +84,6 @@ function RegistroPonto() {
       }
 
       setStream(null);
-
-      navigator.mediaDevices.enumerateDevices().then(devices => {
-        devices.forEach(device => {
-          if (device.kind === 'videoinput') {
-            navigator.mediaDevices.getUserMedia({
-              video: { deviceId: device.deviceId }
-            }).then(stream => {
-              stream.getTracks().forEach(track => track.stop());
-            }).catch(() => {});
-          }
-        });
-      }).catch(() => {});
-
     } catch (error) {
       console.error("Erro ao parar câmeras:", error);
     }
@@ -104,29 +91,27 @@ function RegistroPonto() {
 
   useEffect(() => {
     componenteMontadoRef.current = true;
-    
+
     const inicializacao = async () => {
       setCarregando(true);
-      try {
-        await carregarModelosFaciais();
-        await fetchServerTime();
-        if (componenteMontadoRef.current) {
-          await iniciarCamera();
+      
+      const cameraPromise = iniciarCamera();
+      const modelosPromise = carregarModelosFaciais();
+      
+      await cameraPromise;
+      setCarregando(false);
+      
+      modelosPromise.then(() => {
+        setModelsLoaded(true);
+        fetchServerTime().then(() => {
           setModoQuiosque("detectando");
-        }
+        });
+      });
 
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        window.addEventListener("beforeunload", pararTodasCameras);
-        window.addEventListener("pagehide", pararTodasCameras);
-        window.addEventListener("unload", pararTodasCameras);
-        
-      } catch (error) {
-        setErro(
-          "Erro ao inicializar o sistema. Por favor, recarregue a página."
-        );
-      } finally {
-        setCarregando(false);
-      }
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("beforeunload", pararTodasCameras);
+      window.addEventListener("pagehide", pararTodasCameras);
+      window.addEventListener("unload", pararTodasCameras);
     };
 
     setComponenteAtivo(true);
@@ -135,10 +120,10 @@ function RegistroPonto() {
     return () => {
       componenteMontadoRef.current = false;
       setComponenteAtivo(false);
-      
+
       pararTodasCameras();
       limparTodosTimers();
-      
+
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", pararTodasCameras);
       window.removeEventListener("pagehide", pararTodasCameras);
@@ -1108,7 +1093,7 @@ function RegistroPonto() {
   return (
     <>
       {carregando && modoQuiosque !== "processando" && (
-        <LoadingSpinner message="Preparando câmera..." />
+        <LoadingSpinner message="Carregando modelos de reconhecimento facial e inicializando a câmera..." />
       )}
 
       <div className="fullscreen-container">

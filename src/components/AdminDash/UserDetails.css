@@ -346,6 +346,67 @@
   margin-top: 20px;
 }
 
+.frequency-header-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.download-csv-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.download-csv-button:hover {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.download-csv-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.action-card {
+  flex: 1;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-xl);
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-primary);
+  background: rgba(245, 166, 35, 0.07);
+}
+
+.action-icon {
+  font-size: 2rem;
+  color: var(--accent-primary);
+}
+
 @media (max-width: 768px) {
   .user-profile-section {
     flex-direction: column;
@@ -371,6 +432,16 @@
 
   .frequency-filters {
     flex-direction: column;
+  }
+
+  .photo-upload-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .current-photo, .new-photo {
+    width: 100%;
+    text-align: center;
   }
 }
 

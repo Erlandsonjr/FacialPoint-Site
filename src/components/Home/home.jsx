@@ -8,6 +8,8 @@ import {
   FaCalendarAlt,
   FaCheckCircle,
   FaTimesCircle,
+  FaDownload,
+  FaSpinner,
 } from "react-icons/fa";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
 import {
@@ -52,6 +54,7 @@ function Home() {
   });
   const [attendanceRaw, setAttendanceRaw] = useState(null);
   const [usingLocalTime, setUsingLocalTime] = useState(false);
+  const [downloadingCsv, setDownloadingCsv] = useState(false);
 
   const navigate = useNavigate();
   const userDataFetched = React.useRef(false);
@@ -485,6 +488,76 @@ function Home() {
     navigate("/");
   };
 
+  const handleGenerateReport = async () => {
+    if (!userData || !userData._id || downloadingCsv) return;
+
+    try {
+      setDownloadingCsv(true);
+      setError("");
+      const token = localStorage.getItem("token");
+
+      const checkResponse = await fetch(
+        `${API_BASE}/frequencias/minhas`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!checkResponse.ok) {
+        if (checkResponse.status === 404) {
+          throw new Error(
+            "Você ainda não possui registros de ponto para gerar relatório"
+          );
+        }
+        throw new Error(`Erro ao verificar registros (${checkResponse.status})`);
+      }
+
+      const registros = await checkResponse.json();
+      if (!registros || registros.length === 0) {
+        throw new Error(
+          "Você ainda não possui registros de ponto para gerar relatório"
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE}/frequencias/usuario/${userData._id}/csv`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(
+            "Não foi possível gerar o relatório. Contacte o administrador."
+          );
+        }
+        throw new Error(`Erro ao baixar relatório (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `frequencias_${
+        userData.nome || "usuario"
+      }_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      setError(`${error.message}`);
+    } finally {
+      setDownloadingCsv(false);
+    }
+  };
+
   const lineChartData = {
     labels: attendanceData.map((item) => item.date),
     datasets: [
@@ -758,9 +831,15 @@ function Home() {
           <Link to="/perfil" className="nav-link">
             <FaUserCircle /> Perfil
           </Link>
-          <Link to="/controle" className="nav-link">
-            <FaChartBar /> Gerar Relatório
-          </Link>
+          <button
+            type="button"
+            className="nav-link"
+            onClick={handleGenerateReport}
+            disabled={downloadingCsv}
+            style={{ background: "none", border: "none" }}
+          >
+            <FaChartBar /> {downloadingCsv ? "Baixando..." : "Gerar Relatório"}
+          </button>
         </nav>
 
         <div className="user-actions">
@@ -999,10 +1078,18 @@ function Home() {
         </div>
 
         <div className="quick-actions">
-          <Link to="/controle" className="action-card">
-            <FaChartBar className="action-icon" />
-            <span>Gerar Relatório</span>
-          </Link>
+          <button
+            className="action-card"
+            onClick={handleGenerateReport}
+            disabled={downloadingCsv}
+          >
+            {downloadingCsv ? (
+              <FaSpinner className="icon-spin" />
+            ) : (
+              <FaChartBar className="action-icon" />
+            )}
+            <span>{downloadingCsv ? "Baixando..." : "Gerar Relatório"}</span>
+          </button>
           <Link to="/perfil" className="action-card">
             <FaUserCircle className="action-icon" />
             <span>Gerenciar Perfil</span>
