@@ -171,7 +171,7 @@ function Cadastro() {
       const formData = new FormData();
       formData.append("file", foto);
       const responseCodificacao = await fetch(
-        "https://gerarcodificacaofacialpoint-production.up.railway.app/gerar-codificacao",
+        "https://gerarcodificacaofacialpoint-production.up.railway.app/gerar-codificacao/",
         {
           method: "POST",
           body: formData,
