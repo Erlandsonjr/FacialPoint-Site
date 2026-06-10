@@ -2,8 +2,7 @@ import { FaUser, FaLock, FaArrowRight } from "react-icons/fa";
 import { useState } from "react";
 import "./Login_Cadastro.css";
 import { Link, useNavigate } from "react-router-dom";
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE } from '../../config.js';
 
 const Login = () => {
   const [email, setEmail] = useState("");

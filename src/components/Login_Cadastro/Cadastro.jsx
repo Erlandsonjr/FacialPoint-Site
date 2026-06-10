@@ -13,8 +13,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./Login_Cadastro.css";
 import LoadingSpinner from "./LoadingSpinner";
 import ReactDOM from "react-dom";
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE, CODIFICACAO_API } from '../../config.js';
 
 function Cadastro() {
   const [username, setUsername] = useState("");
@@ -171,7 +170,7 @@ function Cadastro() {
       const formData = new FormData();
       formData.append("file", foto);
       const responseCodificacao = await fetch(
-        "https://gerarcodificacaofacialpoint-production.up.railway.app/gerar-codificacao/",
+        `${CODIFICACAO_API}/gerar-codificacao/`,
         {
           method: "POST",
           body: formData,

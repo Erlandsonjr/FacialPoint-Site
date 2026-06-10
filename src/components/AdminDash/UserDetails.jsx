@@ -6,8 +6,7 @@ import {
   FaTrash, FaExclamationTriangle, FaPlus, FaDownload
 } from 'react-icons/fa';
 import './UserDetails.css';
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE } from '../../config.js';
 
 function UserDetails() {
   const { id } = useParams();

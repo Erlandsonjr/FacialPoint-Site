@@ -25,8 +25,7 @@ import {
   LineElement,
 } from "chart.js";
 import "./home.css";
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE } from '../../config.js';
 
 ChartJS.register(
   LinearScale,

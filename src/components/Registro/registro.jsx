@@ -11,8 +11,7 @@ import LoadingSpinner from "../Login_Cadastro/LoadingSpinner";
 import axios from "axios";
 import * as faceapi from "face-api.js";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE, RECONHECIMENTO_API } from '../../config.js';
 
 function RegistroPonto() {
   const navigate = useNavigate();
@@ -740,7 +739,7 @@ function RegistroPonto() {
       });
 
       const verificacaoResponse = await axios.post(
-        "https://facialpoint-reconhecimento-facial-production.up.railway.app/reconhecer-multiplos/",
+        `${RECONHECIMENTO_API}/reconhecer-multiplos/`,
         formData,
         {
           headers: {
@@ -904,7 +903,7 @@ function RegistroPonto() {
       const hoje = dataAtual.toISOString().split("T")[0];
 
       const verificaRegistroResponse = await fetch(
-        `https://facialpoint-banco-dados-production.up.railway.app/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=${tipoRegistro}`,
+        `${API_BASE}/frequencias/verifica/${usuarioReconhecidoId}?data=${hoje}&tipo=${tipoRegistro}`,
         {
           method: "GET",
           headers: {
@@ -1213,7 +1212,7 @@ function RegistroPonto() {
               className="debug-button"
               onClick={async () => {
                 const response = await fetch(
-                  "https://facialpoint-reconhecimento-facial-production.up.railway.app/status"
+                  `${RECONHECIMENTO_API}/status`
                 );
                 const status = await response.json();
                 alert("Veja o console para detalhes do serviço.");

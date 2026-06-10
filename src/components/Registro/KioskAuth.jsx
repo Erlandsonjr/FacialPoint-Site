@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaLock, FaArrowRight, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import './kioskAuth.css';
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE } from '../../config.js';
 
 function KioskAuth() {
   const [password, setPassword] = useState('');

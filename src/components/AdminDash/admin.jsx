@@ -12,8 +12,7 @@ import {
   FaCog,
 } from "react-icons/fa";
 import "./admin.css";
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE } from '../../config.js';
 
 function Admin() {
   const [users, setUsers] = useState([]);
