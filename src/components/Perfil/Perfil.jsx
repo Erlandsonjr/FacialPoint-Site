@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaArrowLeft, FaCheck, FaIdCard } from "react-icons/fa";
 import "./perfil.css";
 import LoadingSpinner from "../Login_Cadastro/LoadingSpinner";
-
-const API_BASE = "https://facialpoint-banco-dados-production.up.railway.app";
+import { API_BASE } from '../../config.js';
 
 function Perfil() {
   const [userData, setUserData] = useState(null);
